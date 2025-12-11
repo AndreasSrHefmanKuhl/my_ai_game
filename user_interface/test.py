@@ -19,15 +19,19 @@ SCARAB_PATH = os.path.normpath(
     )
 )
 
-#
+# Sprite-Spezifikationen
 SPRITE_WIDTH = 16
 SPRITE_HEIGHT = 16
-Y_POS_ROW = 16  # Die zweite Reihe beginnt nach der 16 Pixel hohen ersten Reihe
+Y_POS_ROW_WALK = 16  # Die zweite Reihe (Index 1) enthält die Lauf-Frames
+Y_POS_ROW_STAND = 0  # Die erste Reihe (Index 0) enthält die Stand-Frames
 NUM_FRAMES = 4
 
 # Rendering- und Bewegungsparameter
 SCALE_FACTOR = 4  # Skalierung (16x16 wird zu 64x64)
-MOVEMENT_SPEED_PIXELS_PER_SECOND = 60  # Bewegungsgeschwindigkeit des Scarab
+# Maximale Bewegungsgeschwindigkeit, wenn eine Taste gedrückt wird
+MAX_MOVEMENT_SPEED_PIXELS_PER_SECOND = 150
+# Animationsgeschwindigkeit (je niedriger der Wert, desto schneller der Frame-Wechsel)
+ANIMATION_SPEED = 0.12
 
 
 # ----------------------------------------------------------------------
@@ -37,10 +41,12 @@ MOVEMENT_SPEED_PIXELS_PER_SECOND = 60  # Bewegungsgeschwindigkeit des Scarab
 def get_sprite(sheet, x, y, width, height):
     """Extrahiert ein Sprite aus dem Sheet mithilfe der blit-Methode."""
 
+    # Stellt sicher, dass das Sprite transparent ist
     sprite = pygame.Surface([width, height], pygame.SRCALPHA)
 
     source_rect = pygame.Rect(x, y, width, height)
 
+    # Kopiert den Bereich vom Spritesheet auf die neue Surface
     sprite.blit(sheet, (0, 0), source_rect)
     return sprite
 
@@ -49,22 +55,25 @@ def get_sprite(sheet, x, y, width, height):
 #  LADEN UND SKALIEREN DER FRAMES
 # ----------------------------------------------------------------------
 
-def scarab_walk():
-    """Lädt das Spritesheet und extrahiert die vier skalierten Walk-Frames."""
+def load_and_scale_frames(sheet_path):
+    """Lädt das Spritesheet und extrahiert die skalierten Walk- und Stand-Frames."""
 
     try:
-        scarab_sprite_sheet = pygame.image.load(SCARAB_PATH).convert_alpha()
+        scarab_sprite_sheet = pygame.image.load(sheet_path).convert_alpha()
     except pygame.error as e:
-        print(f"Fehler: Das Spritesheet konnte nicht geladen werden unter Pfad: {SCARAB_PATH}")
+        print(f"Fehler: Das Spritesheet konnte nicht geladen werden unter Pfad: {sheet_path}")
         pygame.quit()
         exit()
 
     walk_frames = []
+    stand_frames = []
+
+    # --- Lauf-Frames (Zeile 1) ---
     for i in range(NUM_FRAMES):
         frame = get_sprite(
             scarab_sprite_sheet,
             x=i * SPRITE_WIDTH,
-            y=Y_POS_ROW,
+            y=Y_POS_ROW_WALK,
             width=SPRITE_WIDTH,
             height=SPRITE_HEIGHT
         )
@@ -75,9 +84,27 @@ def scarab_walk():
         )
         walk_frames.append(scaled_frame)
 
-    return tuple(walk_frames)
+    # --- Stand-Frames (Zeile 0) ---
+    # Nur ein Stand-Frame benötigt (den ersten der Zeile 0)
+    stand_frame = get_sprite(
+        scarab_sprite_sheet,
+        x=0,
+        y=Y_POS_ROW_STAND,
+        width=SPRITE_WIDTH,
+        height=SPRITE_HEIGHT
+    )
+    scaled_stand_frame = pygame.transform.scale(
+        stand_frame,
+        (SPRITE_WIDTH * SCALE_FACTOR, SPRITE_HEIGHT * SCALE_FACTOR)
+    )
+    stand_frames.append(scaled_stand_frame)
 
 
+
+    return {
+        "walk": tuple(walk_frames),
+        "stand": tuple(stand_frames)  # Nur ein Element
+    }
 
 
 # ----------------------------------------------------------------------
@@ -96,27 +123,30 @@ def main():
         font = None
 
     # Fenster erstellen
-    screen_width = 400
-    screen_height = 200
+    screen_width = 800
+    screen_height = 400
     screen = pygame.display.set_mode((screen_width, screen_height))
-    pygame.display.set_caption("Scarab Walking Across Screen (16x16)")
+    pygame.display.set_caption("Scarab User Controlled")
 
     # Frames laden
-    SCARAB_WALK_FRAMES = scarab_walk()
+    SCARAB_FRAMES = load_and_scale_frames(SCARAB_PATH)
 
-    if not SCARAB_WALK_FRAMES:
+    if not SCARAB_FRAMES["walk"]:
         return
 
     # Animations-Variablen
     current_frame_index = 0.0
-    animation_speed = 0.12  # Wechselt den Frame alle 0.12 Sekunden
 
-    # Position des Sprites: Start außerhalb des linken Rands
-    start_x = -SCARAB_WALK_FRAMES[0].get_width()
+    # Steuerungsvariablen
+    moving_left = False
+    moving_right = False
+    # Merkt sich die Richtung, in die der Scarab blickt (True=Rechts, False=Links)
+    facing_right = True
 
-    sprite_rect = SCARAB_WALK_FRAMES[0].get_rect(
-        x=start_x,
-        centery=screen.get_rect().centery
+    # Initialposition des Sprites: Mittig am unteren Bildschirmrand
+    sprite_rect = SCARAB_FRAMES["stand"][0].get_rect(
+        centerx=screen_width // 2,
+        bottom=screen_height
     )
 
     clock = pygame.time.Clock()
@@ -124,35 +154,68 @@ def main():
 
     while running:
 
+        # 1. EVENT-HANDLING (Input-Erkennung)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.KEYDOWN:
                 if event.key in (pygame.K_ESCAPE, pygame.K_q):
                     running = False
-                # Schaltet den Debug-Modus (roter Rahmen und FPS) um
                 elif event.key == pygame.K_d:
                     DEBUG_MODE = not DEBUG_MODE
+                # Bewegungssteuerung
+                elif event.key == pygame.K_LEFT:
+                    moving_left = True
+                    facing_right = False
+                elif event.key == pygame.K_RIGHT:
+                    moving_right = True
+                    facing_right = True
 
-        # Update (Zeit-basiert)
+            elif event.type == pygame.KEYUP:
+                # Setzt die Bewegung zurück, wenn die Taste losgelassen wird
+                if event.key == pygame.K_LEFT:
+                    moving_left = False
+                elif event.key == pygame.K_RIGHT:
+                    moving_right = False
+
+        # 2. UPDATE (Zeit-basiert)
         dt = clock.tick(60) / 1000.0  # Zeit seit dem letzten Frame in Sekunden
 
-        #  FRAME-WECHSEL (Animation)
-        current_frame_index += dt / animation_speed
-        if current_frame_index >= len(SCARAB_WALK_FRAMES):
-            current_frame_index = 0
+        # --- POSITION-UPDATE (Bewegung) ---
+        distance_moved = MAX_MOVEMENT_SPEED_PIXELS_PER_SECOND * dt
 
-        #  POSITION-UPDATE
-        # Berechnet die Strecke für dieses Zeitintervall (dt)
-        distance_moved = MOVEMENT_SPEED_PIXELS_PER_SECOND * dt
-        sprite_rect.x += distance_moved
+        if moving_left:
+            sprite_rect.x -= distance_moved
+        if moving_right:
+            sprite_rect.x += distance_moved
 
-        #  Setze den Scarab zurück, wenn er rechts verschwindet
-        if sprite_rect.left > screen_width:
-            sprite_rect.right = 0
+        # Begrenzung auf den Bildschirmrand
+        sprite_rect.left = max(sprite_rect.left, 0)
+        sprite_rect.right = min(sprite_rect.right, screen_width)
 
-            # Frame holen
-        current_frame = SCARAB_WALK_FRAMES[int(current_frame_index)]
+        # --- FRAME-WECHSEL (Animation) ---
+
+        # Prüft, ob sich der Scarab bewegt
+        is_moving = moving_left or moving_right
+
+        if is_moving:
+            # Animation nur fortsetzen, wenn sich der Scarab bewegt
+            current_frame_index += dt / ANIMATION_SPEED
+            # Setzt den Index zurück, wenn das Ende der Walk-Frames erreicht ist
+            if current_frame_index >= len(SCARAB_FRAMES["walk"]):
+                current_frame_index = 0
+
+            # Holt den aktuellen Lauf-Frame
+            current_frame = SCARAB_FRAMES["walk"][int(current_frame_index)]
+
+        else:
+            # Wenn sich der Scarab nicht bewegt, zeige den Stand-Frame
+            current_frame_index = 0.0  # Index zurücksetzen
+            current_frame = SCARAB_FRAMES["stand"][0]
+
+        #  horizontale Spiegeln , wenn er nach links blickt (facing_right == False)
+        if not facing_right:
+            current_frame = pygame.transform.flip(current_frame, True, False)
 
         # 3. Rendering
         screen.fill((50, 65, 70))
@@ -160,7 +223,7 @@ def main():
         # Rendert den aktuellen Frame an seiner bewegten Position
         screen.blit(current_frame, sprite_rect)
 
-        # DEBUG-AUSGABE (Zur Überprüfung des Renderings und der Position)
+        # DEBUG-AUSGABE
         if DEBUG_MODE:
             # Roter Rahmen um das Sprite-Rect
             pygame.draw.rect(screen, (255, 0, 0), sprite_rect, 1)
@@ -168,8 +231,13 @@ def main():
             # FPS-Anzeige
             if font:
                 fps = clock.get_fps()
-                text = font.render(f"FPS: {fps:.1f} ", True, (255, 255, 255))
-                screen.blit(text, (5,5))
+                text_x = sprite_rect.centerx - 100
+                text_y = sprite_rect.top - 20
+                text = font.render(
+                    f"FPS: {fps:.1f} | Pos: ({sprite_rect.x}, {sprite_rect.y}) | Moving: {is_moving}",
+                    True, (255, 255, 255)
+                )
+                screen.blit(text, (5, 5))
 
         pygame.display.update()
 
