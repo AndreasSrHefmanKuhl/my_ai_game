@@ -14,7 +14,7 @@ def get_sprite(sheet, x, y, width, height):
     return sprite
 
 
-def walk(sheet_path,num_frames,scale_factor,width,height, y_pos_row ):
+def load_scale_walk_stand(sheet_path,num_frames,scale_factor,width,height, y_pos_row,y_pos_stand ):
 
     try:
         sprite_sheet = pygame.image.load(sheet_path).convert_alpha()
@@ -24,8 +24,11 @@ def walk(sheet_path,num_frames,scale_factor,width,height, y_pos_row ):
         exit()
 
     walk_frames = []
+    stands_frames =[]
+
     for i in range(num_frames):
-        frame = get_sprite(
+
+        walk_frame = get_sprite(
             sprite_sheet,
             x = i *width,
             y=y_pos_row,
@@ -33,11 +36,27 @@ def walk(sheet_path,num_frames,scale_factor,width,height, y_pos_row ):
             height= height
         )
         scaled_frame = pygame.transform.scale(
-            frame,
+            walk_frame,
             (width * scale_factor, height * scale_factor)
         )
         walk_frames.append(scaled_frame)
 
-    return tuple(walk_frames)
+        stand_frame = get_sprite(
+            sprite_sheet,
+            x=0,
+            y=y_pos_stand,
+            width=width,
+            height=height
+        )
+        scaled_stand_frame = pygame.transform.scale(
+            stand_frame,
+            (width * scale_factor, height * scale_factor)
+        )
+        stands_frames.append(stand_frame)
+
+    return {
+        "walk":tuple(walk_frames),
+        "stand":tuple(stands_frames)
+    }
 
 
