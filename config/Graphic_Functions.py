@@ -1,6 +1,6 @@
 import pygame
 
-from user_interface.test import Y_POS_ROW
+
 
 
 def get_sprite(sheet, x, y, width, height):
