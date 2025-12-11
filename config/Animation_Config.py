@@ -32,6 +32,13 @@ class AnimationConfig:
             Y_POS_ROW = 16
             NUM_FRAMES = 4
 
+        class Sprite_Shoot:
+            WIDTH = 16
+            HEIGHT = 16
+            Y_POS_ROW =48
+            NUM_FRAMES = 5
+
+
         class Properties:
             SCALE_FACTOR = 4
             MOVEMENT_SPEED_PIXELS_PER_SECOND = 60
@@ -64,6 +71,12 @@ class AnimationConfig:
             Y_POS_ROW = 16
             NUM_FRAMES = 4 #  4 Frames für eine fließendere Animation
 
+        class Sprite_Shoot:
+            WIDTH = 16
+            HEIGHT = 16
+            Y_POS_ROW = 48
+            NUM_FRAMES = 5
+
         class Properties:
             """Rendering- und Bewegungseigenschaften für Spider."""
 
@@ -83,17 +96,45 @@ class AnimationConfig:
             )
         )
 
-        class Sprite_Walk:
-            """Sprite-Definition und Animations-Konstanten für Spider."""
+        class Sprite_Fly:
+
 
             WIDTH = 16
             HEIGHT = 16
-            Y_POS_ROW = 16
-            NUM_FRAMES = 4 #  4 Frames für eine fließendere Animation
+            Y_POS_ROW = 0
+            NUM_FRAMES = 8  #  8 Frames für eine fließendere Animation
 
         class Properties:
 
-            SCALE_FACTOR = 4
+            SCALE_FACTOR = 2
+
+    class Hornet:
+
+        ASSET_PATH = os.path.normpath(
+            os.path.join(AnimationConfig.Paths.BASE_DIR,
+                         ".."
+                         "assets",
+                         "Robot Warfare Asset Pack 22-11-24",
+                         "Robots",
+                         "Hornet.png",
+                         )
+        )
+
+        class Sprite_Fly:
+            WIDTH = 16
+            HEIGHT = 16
+            Y_POS_ROW = 0
+            NUM_FRAMES = 8  # 8 Frames für eine fließendere Animation
+
+        class Sprite_Shoot:
+            WIDTH = 16
+            HEIGHT = 16
+            Y_POS_ROW = 16
+            NUM_FRAMES = 8
+
+        class Properties:
+            SCALE_FACTOR = 2
+
 
 
 
