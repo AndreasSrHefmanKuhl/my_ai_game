@@ -25,6 +25,10 @@ class AnimationConfig:
                 "Scarab.png",
             )
         )
+        class Sprite_Stand:
+            WIDTH=16
+            HEIGHT=16
+            Y_POS_ROW = 0
 
         class Sprite_Walk:
             WIDTH = 16
