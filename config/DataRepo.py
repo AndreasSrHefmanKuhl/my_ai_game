@@ -3,6 +3,9 @@ import pygame
 #------------------------------------------------------------------------------------
 # Graphical functions
 #------------------------------------------------------------------------------------
+def set_screen(width,height):
+
+    return pygame.display.set_mode((width,height))
 
 
 def get_sprite(sheet, x , y, width, height):
