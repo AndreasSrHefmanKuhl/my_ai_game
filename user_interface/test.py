@@ -126,7 +126,7 @@ def main():
     screen_width = 800
     screen_height = 400
     screen = pygame.display.set_mode((screen_width, screen_height))
-    pygame.display.set_caption("Scarab User Controlled")
+    pygame.display.set_caption("")
 
     # Frames laden
     SCARAB_FRAMES = load_and_scale_frames(SCARAB_PATH)
@@ -140,13 +140,16 @@ def main():
     # Steuerungsvariablen
     moving_left = False
     moving_right = False
+    moving_up = False
+    moving_down = False
+
     # Merkt sich die Richtung, in die der Scarab blickt (True=Rechts, False=Links)
     facing_right = True
 
     # Initialposition des Sprites: Mittig am unteren Bildschirmrand
     sprite_rect = SCARAB_FRAMES["stand"][0].get_rect(
         centerx=screen_width // 2,
-        bottom=screen_height
+        bottom=screen_height // 2,
     )
 
     clock = pygame.time.Clock()
@@ -154,7 +157,7 @@ def main():
 
     while running:
 
-        # 1. EVENT-HANDLING (Input-Erkennung)
+        #  Input-Erkennung(event handling)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -163,10 +166,18 @@ def main():
                     running = False
                 elif event.key == pygame.K_d:
                     DEBUG_MODE = not DEBUG_MODE
+
                 # Bewegungssteuerung
+                elif event.key == pygame.K_DOWN:
+                    moving_down = True
+
+                elif event.key == pygame.K_UP:
+                    moving_up = True
+
                 elif event.key == pygame.K_LEFT:
                     moving_left = True
                     facing_right = False
+
                 elif event.key == pygame.K_RIGHT:
                     moving_right = True
                     facing_right = True
@@ -177,8 +188,12 @@ def main():
                     moving_left = False
                 elif event.key == pygame.K_RIGHT:
                     moving_right = False
+                elif event.key == pygame.K_UP:
+                    moving_up = False
+                elif event.key == pygame.K_DOWN:
+                    moving_down = False
 
-        # 2. UPDATE (Zeit-basiert)
+        # UPDATE (Zeit-basiert)
         dt = clock.tick(60) / 1000.0  # Zeit seit dem letzten Frame in Sekunden
 
         # --- POSITION-UPDATE (Bewegung) ---
@@ -188,6 +203,10 @@ def main():
             sprite_rect.x -= distance_moved
         if moving_right:
             sprite_rect.x += distance_moved
+        if moving_down:
+            sprite_rect.y += distance_moved
+        if moving_up :
+            sprite_rect.y -= distance_moved
 
         # Begrenzung auf den Bildschirmrand
         sprite_rect.left = max(sprite_rect.left, 0)
@@ -196,7 +215,7 @@ def main():
         # --- FRAME-WECHSEL (Animation) ---
 
         # Prüft, ob sich der Scarab bewegt
-        is_moving = moving_left or moving_right
+        is_moving = moving_left or moving_right or moving_up or moving_down
 
         if is_moving:
             # Animation nur fortsetzen, wenn sich der Scarab bewegt
@@ -217,7 +236,8 @@ def main():
         if not facing_right:
             current_frame = pygame.transform.flip(current_frame, True, False)
 
-        # 3. Rendering
+
+        #  Rendering
         screen.fill((50, 65, 70))
 
         # Rendert den aktuellen Frame an seiner bewegten Position
