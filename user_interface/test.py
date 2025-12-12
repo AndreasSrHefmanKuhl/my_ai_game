@@ -211,6 +211,9 @@ def main():
         # Begrenzung auf den Bildschirmrand
         sprite_rect.left = max(sprite_rect.left, 0)
         sprite_rect.right = min(sprite_rect.right, screen_width)
+        sprite_rect.top = max(sprite_rect.top,-3)
+        sprite_rect.y = min(sprite_rect.y,336)
+
 
         # --- FRAME-WECHSEL (Animation) ---
 
