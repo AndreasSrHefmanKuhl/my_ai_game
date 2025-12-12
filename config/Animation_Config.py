@@ -3,6 +3,9 @@ import os
 
 class AnimationConfig:
 
+    class Screen:
+        screen_width = 800
+        screen_height = 400
 
     class Paths:
         """Enthält alle generischen Pfad- und Dateisystem-Konstanten."""
