@@ -10,6 +10,10 @@ class AnimationConfig:
         # Basisverzeichnis des aktuellen Skripts
         BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+    class BaseValue:
+        WIDTH = 16
+        HEIGHT = 16
+
     class Scarab:
         """
         Konfiguration und Eigenschaften, die spezifisch für das
@@ -26,19 +30,14 @@ class AnimationConfig:
             )
         )
         class Sprite_Stand:
-            WIDTH=16
-            HEIGHT=16
             Y_POS_ROW = 0
 
         class Sprite_Walk:
-            WIDTH = 16
-            HEIGHT = 16
             Y_POS_ROW = 16
             NUM_FRAMES = 4
 
         class Sprite_Shoot:
-            WIDTH = 16
-            HEIGHT = 16
+
             Y_POS_ROW =48
             NUM_FRAMES = 5
 
@@ -70,14 +69,12 @@ class AnimationConfig:
         class Sprite_Walk:
             """Sprite-Definition und Animations-Konstanten für Spider."""
 
-            WIDTH = 16
-            HEIGHT = 16
+
             Y_POS_ROW = 16
             NUM_FRAMES = 4 #  4 Frames für eine fließendere Animation
 
         class Sprite_Shoot:
-            WIDTH = 16
-            HEIGHT = 16
+
             Y_POS_ROW = 48
             NUM_FRAMES = 5
 
@@ -102,9 +99,6 @@ class AnimationConfig:
 
         class Sprite_Fly:
 
-
-            WIDTH = 16
-            HEIGHT = 16
             Y_POS_ROW = 0
             NUM_FRAMES = 8  #  8 Frames für eine fließendere Animation
 
@@ -125,14 +119,11 @@ class AnimationConfig:
         )
 
         class Sprite_Fly:
-            WIDTH = 16
-            HEIGHT = 16
             Y_POS_ROW = 0
             NUM_FRAMES = 8  # 8 Frames für eine fließendere Animation
 
         class Sprite_Shoot:
-            WIDTH = 16
-            HEIGHT = 16
+
             Y_POS_ROW = 16
             NUM_FRAMES = 8
 
