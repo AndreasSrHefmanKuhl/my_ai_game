@@ -1,9 +1,11 @@
 import pygame
 
+#------------------------------------------------------------------------------------
+# Graphical functions
+#------------------------------------------------------------------------------------
 
 
-
-def get_sprite(sheet, x, y, width, height):
+def get_sprite(sheet, x , y, width, height):
     """Extrahiert ein Sprite aus dem Sheet mithilfe der blit-Methode."""
 
     sprite = pygame.Surface([width, height], pygame.SRCALPHA)
@@ -52,7 +54,7 @@ def load_scale_walk_stand(sheet_path,num_frames,scale_factor,width,height, y_pos
             stand_frame,
             (width * scale_factor, height * scale_factor)
         )
-        stands_frames.append(stand_frame)
+        stands_frames.append(scaled_stand_frame)
 
     return {
         "walk":tuple(walk_frames),
