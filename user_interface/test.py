@@ -53,11 +53,11 @@ HORNET_PATH = os.path.normpath(
 
 
 # Sprite-Spezifikationen
-SPRITE_WIDTH = 22
-SPRITE_HEIGHT = 24
-Y_POS_ROW_WALK = 2 # Die zweite Reihe (Index 1) enthält die Lauf-Frames
-Y_POS_ROW_STAND = 2  # Die erste Reihe (Index 0) enthält die Stand-Frames
-NUM_FRAMES = 2
+SPRITE_WIDTH = 16
+SPRITE_HEIGHT = 16
+Y_POS_ROW_WALK = 16 # Die zweite Reihe (Index 1) enthält die Lauf-Frames
+Y_POS_ROW_STAND = 0  # Die erste Reihe (Index 0) enthält die Stand-Frames
+NUM_FRAMES = 4
 
 # Rendering- und Bewegungsparameter
 SCALE_FACTOR = 2  # Skalierung (16x16 wird zu 64x64)
@@ -159,16 +159,17 @@ def main():
     display,display_width,display_height = set_display(800,400,"test screen")
 
     # Frames laden
-    Scarab_Frames = load_and_scale_frames(SCARAB_PATH)
-    Spider_FRAMES = load_and_scale_frames(SPIDER_PATH)
-    Wasp_Frames = load_and_scale_frames(WASP_PATH)
-    Hornet_Frames = load_and_scale_frames(HORNET_PATH)
+    options = {
+        "Scarab_Frames": load_and_scale_frames(SCARAB_PATH),
+        "Spider_FRAMES": load_and_scale_frames(SPIDER_PATH),
+        "Wasp_Frames": load_and_scale_frames(WASP_PATH),
+        "Hornet_Frames": load_and_scale_frames(HORNET_PATH),
+    }
+    frames = options["Spider_FRAMES"]
 
 
 
 
-    if not Hornet_Frames["walk"]:
-        return
 
     # Animations-Variablen
     current_frame_index = 0.0
@@ -185,7 +186,7 @@ def main():
     facing_right = True
 
     # Initialposition des Sprites: Mittig am unteren Bildschirmrand
-    sprite_rect = Hornet_Frames["stand"][0].get_rect(
+    sprite_rect = frames["stand"][0].get_rect(
         centerx=display_width  // 2,
         bottom=display_height // 2,
     )
@@ -263,16 +264,16 @@ def main():
 
             current_frame_index += dt / ANIMATION_SPEED
             # Setzt den Index zurück
-            if current_frame_index >= len(Hornet_Frames["walk"]):
+            if current_frame_index >= len(frames["walk"]):
                 current_frame_index = 0
 
             # Holt den aktuellen Lauf-Frame
-            current_frame = Hornet_Frames["walk"][int(current_frame_index)]
+            current_frame = frames["walk"][int(current_frame_index)]
 
         else:
             # Wenn sich der Scarab nicht bewegt, zeige den Stand-Frame
             current_frame_index = 0.0  # Index zurücksetzen
-            current_frame = Hornet_Frames["stand"][0]
+            current_frame = frames["stand"][0]
 
         #  horizontale Spiegeln , wenn er nach links blickt (facing_right == False)
         if not facing_right:
