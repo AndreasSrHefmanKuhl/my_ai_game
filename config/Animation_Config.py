@@ -122,8 +122,10 @@ class AnimationConfig:
         )
 
         class Sprite_Fly:
+            WIDTH = 22
+            HEIGHT = 24
             Y_POS_ROW = 2
-            NUM_FRAMES = 8  # 8 Frames für eine fließendere Animation
+            NUM_FRAMES = 2  # 8 Frames für eine fließendere Animation
 
         class Sprite_Shoot:
 

@@ -262,9 +262,10 @@ def main():
         is_moving = moving_left or moving_right or moving_up or moving_down
 
         if is_moving:
-            # Animation nur fortsetzen, wenn sich der Scarab bewegt
+            # Animation nur fortsetzen,
+
             current_frame_index += dt / ANIMATION_SPEED
-            # Setzt den Index zurück, wenn das Ende der Walk-Frames erreicht ist
+            # Setzt den Index zurück
             if current_frame_index >= len(Hornet_Frames["walk"]):
                 current_frame_index = 0
 
@@ -298,7 +299,7 @@ def main():
                 text_x = sprite_rect.centerx - 100
                 text_y = sprite_rect.top - 20
                 text = font.render(
-                    f"FPS: {fps:.1f} | Pos: ({sprite_rect.x}, {sprite_rect.y}) | Moving: {is_moving}",
+                    f"FPS: {fps:.1f} | Pos: ({text_x}, {text_y}) | Moving: {is_moving}",
                     True, (255, 255, 255)
                 )
                 display.blit(text, (5, 5))
