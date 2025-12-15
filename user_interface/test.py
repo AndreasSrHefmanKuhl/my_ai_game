@@ -158,6 +158,7 @@ def main():
     # Fenster erstellen
     display,display_width,display_height = set_display(800,400,"test screen")
 
+
     # Frames laden
     options = {
         "Scarab_Frames": load_and_scale_frames(SCARAB_PATH),

@@ -129,7 +129,66 @@ def load_scale_jump(sheet_path,num_frames,scale_factor,width,height,y_pos_jump):
 
         return tuple(jumping_frames)
 
+def initial_controll(running,clock,MAX_MOVEMENT_SPEED_PIXELS_PER_SECOND,moving_left,moving_right,moving_down,moving_up,sprite_rect,display_width):
 
+    while running:
+
+        #  Input-Erkennung(event handling)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key in (pygame.K_ESCAPE, pygame.K_q):
+                    running = False
+                elif event.key == pygame.K_d:
+                    DEBUG_MODE = not DEBUG_MODE
+
+                # Bewegungssteuerung
+                elif event.key == pygame.K_DOWN:
+                    moving_down = True
+
+                elif event.key == pygame.K_UP:
+                    moving_up = True
+
+                elif event.key == pygame.K_LEFT:
+                    moving_left = True
+                    facing_right = False
+
+                elif event.key == pygame.K_RIGHT:
+                    moving_right = True
+                    facing_right = True
+
+            elif event.type == pygame.KEYUP:
+                # Setzt die Bewegung zurück, wenn die Taste losgelassen wird
+                if event.key == pygame.K_LEFT:
+                    moving_left = False
+                elif event.key == pygame.K_RIGHT:
+                    moving_right = False
+                elif event.key == pygame.K_UP:
+                    moving_up = False
+                elif event.key == pygame.K_DOWN:
+                    moving_down = False
+
+        # UPDATE (Zeit-basiert)
+        dt = clock.tick(60) / 1000.0  # Zeit seit dem letzten Frame in Sekunden
+
+        # --- POSITION-UPDATE (Bewegung) ---
+        distance_moved = MAX_MOVEMENT_SPEED_PIXELS_PER_SECOND * dt
+
+        if moving_left:
+            sprite_rect.x -= distance_moved
+        if moving_right:
+            sprite_rect.x += distance_moved
+        if moving_down:
+            sprite_rect.y += distance_moved
+        if moving_up :
+            sprite_rect.y -= distance_moved
+
+        # Begrenzung auf den Bildschirmrand
+        sprite_rect.left = max(sprite_rect.left, 0)
+        sprite_rect.right = min(sprite_rect.right, display_width)
+        sprite_rect.top = max(sprite_rect.top,-3)
+        sprite_rect.y = min(sprite_rect.y,336)
 
 
 
