@@ -22,7 +22,7 @@ def get_sprite(sheet, x , y, width, height):
     return sprite
 
 
-def load_scale_walk_stand(sheet_path,num_frames,scale_factor,width,height, y_pos_row,y_pos_stand ):
+def load_scale_walk_stand(sheet_path,num_frames,scale_factor,width,height, y_pos_row,y_pos_stand,y_pos_sh ):
 
     try:
         sprite_sheet = pygame.image.load(sheet_path).convert_alpha()
@@ -66,5 +66,70 @@ def load_scale_walk_stand(sheet_path,num_frames,scale_factor,width,height, y_pos
         "walk":tuple(walk_frames),
         "stand":tuple(stands_frames)
     }
+
+def load_scale_shoot(sheet_path,num_frames,scale_factor,width,height, y_pos_shoot):
+
+    try:
+        sprite_sheet = pygame.image.load(sheet_path).convert_alpha()
+    except pygame.error as e:
+        print(f"Fehler: Das Spritesheet konnte nicht geladen werden unter Pfad: {sheet_path}")
+        pygame.quit()
+        exit()
+
+    shooting_frames = []
+
+    for i in range(num_frames):
+
+        shoot_frame = get_sprite(
+        sheet_path,
+        x=i*width,
+        y = y_pos_shoot,
+        width=width,
+        height=height
+    )
+
+        scaled_shoot_frame = pygame.transform.scale(
+            shoot_frame,
+            (width * scale_factor, height * scale_factor)
+        )
+        shooting_frames.append(scaled_shoot_frame)#
+
+    return tuple(shooting_frames)
+
+
+
+
+
+def load_scale_jump(sheet_path,num_frames,scale_factor,width,height,y_pos_jump):
+
+    #TO DO function
+
+    try:
+        sprite_sheet = pygame.image.load(sheet_path).convert_alpha()
+    except pygame.error as e:
+        print(f"Fehler: Das Spritesheet konnte nicht geladen werden unter Pfad: {sheet_path}")
+        pygame.quit()
+        exit()
+
+    jumping_frames=[]
+
+    for i in range(num_frames):
+        jump_frame= get_sprite(
+            sheet_path,
+            x=i*width,
+            y = y_pos_jump,
+            width=width,
+            height=height
+        )
+        scaled_jump_frame = pygame.transform.scale(
+            jump_frame,
+            (width * scale_factor, height * scale_factor)
+        )
+        jumping_frames.append(scaled_jump_frame)
+
+        return tuple(jumping_frames)
+
+
+
 
 
