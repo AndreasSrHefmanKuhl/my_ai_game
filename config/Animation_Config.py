@@ -92,7 +92,7 @@ class AnimationConfig:
 
         ASSET_PATH = os.path.normpath(
             os.path.join(AnimationConfig.Paths.BASE_DIR,
-                ".."
+                "..",
                 "assets",
                 "Robot Warfare Asset Pack 22-11-24",
                 "Robots",
@@ -113,7 +113,7 @@ class AnimationConfig:
 
         ASSET_PATH = os.path.normpath(
             os.path.join(AnimationConfig.Paths.BASE_DIR,
-                         ".."
+                         "..",
                          "assets",
                          "Robot Warfare Asset Pack 22-11-24",
                          "Robots",
@@ -122,12 +122,12 @@ class AnimationConfig:
         )
 
         class Sprite_Fly:
-            Y_POS_ROW = 0
+            Y_POS_ROW = 2
             NUM_FRAMES = 8  # 8 Frames für eine fließendere Animation
 
         class Sprite_Shoot:
 
-            Y_POS_ROW = 16
+            Y_POS_ROW = 18
             NUM_FRAMES = 8
 
         class Properties:
