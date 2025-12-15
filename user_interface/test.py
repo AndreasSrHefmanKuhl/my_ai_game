@@ -160,7 +160,7 @@ def main():
     #screen_height = 400
     #screen = pygame.display.set_mode((screen_width, screen_height))
     #pygame.display.set_caption("")
-    display,display_width,display_height = set_display(800,400,"my screen")
+    display,display_width,display_height = set_display(800,400,"test screen")
     # Frames laden
     Scarab_Frames = load_and_scale_frames(SCARAB_PATH)
     Spider_FRAMES = load_and_scale_frames(SPIDER_PATH)
