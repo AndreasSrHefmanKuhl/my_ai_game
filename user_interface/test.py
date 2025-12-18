@@ -132,7 +132,7 @@ def main():
 
         # --- UPDATE LOGIK ---
 
-        #  Bewegung
+        #  Bewegung und speichern des aktuellen zustandes
         dist = MAX_MOVEMENT_SPEED_PIXELS_PER_SECOND * dt
         if moving_keys["left"]:  sprite_rect.x -= dist
         if moving_keys["right"]: sprite_rect.x += dist
