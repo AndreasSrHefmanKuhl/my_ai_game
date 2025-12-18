@@ -1,3 +1,5 @@
+import os
+
 import pygame
 
 #------------------------------------------------------------------------------------
@@ -9,6 +11,11 @@ def set_display(width,height,name):
     screen = pygame.display.set_mode((screen_width, screen_height))
     pygame.display.set_caption(f"{name}")
     return screen,screen_width,screen_height
+
+def get_asset_path(filename,BASE_DIR):
+    return os.path.normpath(
+        os.path.join(BASE_DIR, "..", "assets", "Robot Warfare Asset Pack 22-11-24", "Robots", filename)
+    )
 
 
 def get_sprite(sheet, x , y, width, height):
@@ -129,9 +136,9 @@ def load_scale_jump(sheet_path,num_frames,scale_factor,width,height,y_pos_jump):
 
         return tuple(jumping_frames)
 
-def initial_controll(running,clock,MAX_MOVEMENT_SPEED_PIXELS_PER_SECOND,moving_left,moving_right,moving_down,moving_up,sprite_rect,display_width):
+def initial_controll(DEBUG_MODE):
 
-    while running:
+
 
         #  Input-Erkennung(event handling)
         for event in pygame.event.get():
@@ -169,26 +176,7 @@ def initial_controll(running,clock,MAX_MOVEMENT_SPEED_PIXELS_PER_SECOND,moving_l
                 elif event.key == pygame.K_DOWN:
                     moving_down = False
 
-        # UPDATE (Zeit-basiert)
-        dt = clock.tick(60) / 1000.0  # Zeit seit dem letzten Frame in Sekunden
-
-        # --- POSITION-UPDATE (Bewegung) ---
-        distance_moved = MAX_MOVEMENT_SPEED_PIXELS_PER_SECOND * dt
-
-        if moving_left:
-            sprite_rect.x -= distance_moved
-        if moving_right:
-            sprite_rect.x += distance_moved
-        if moving_down:
-            sprite_rect.y += distance_moved
-        if moving_up :
-            sprite_rect.y -= distance_moved
-
-        # Begrenzung auf den Bildschirmrand
-        sprite_rect.left = max(sprite_rect.left, 0)
-        sprite_rect.right = min(sprite_rect.right, display_width)
-        sprite_rect.top = max(sprite_rect.top,-3)
-        sprite_rect.y = min(sprite_rect.y,336)
+            return moving_up,moving_left,moving_down,moving_right,facing_right
 
 
 
