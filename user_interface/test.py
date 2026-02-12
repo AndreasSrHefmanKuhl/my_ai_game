@@ -20,18 +20,18 @@ SPIDER_PATH = get_asset_path("Spider.png",BASE_DIR)
 WASP_PATH = get_asset_path("Wasp.png",BASE_DIR)
 HORNET_PATH = get_asset_path("Hornet.png",BASE_DIR)
 
-SPRITE_WIDTH = 16
-SPRITE_HEIGHT = 16
-Y_POS_ROW_WALK = 16
+SPRITE_WIDTH = 22
+SPRITE_HEIGHT = 24
+Y_POS_ROW_WALK = 0
 Y_POS_ROW_STAND = 0
-NUM_FRAMES = 4
+NUM_FRAMES = 2
 
-SCALE_FACTOR = 4
+SCALE_FACTOR = 8
 MAX_MOVEMENT_SPEED_PIXELS_PER_SECOND = 150
 ANIMATION_SPEED = 0.12
 
 # Schuss-Einstellungen
-BULLET_COOLDOWN = 0.3  # Sekunden zwischen den Schüssen
+BULLET_COOLDOWN = 0.15 # Sekunden zwischen den Schüssen
 Bullet = classes.Bullet
 
 # ----------------------------------------------------------------------
@@ -84,7 +84,7 @@ def main():
         "Wasp": load_and_scale_frames(WASP_PATH),
         "Hornet": load_and_scale_frames(HORNET_PATH),
     }
-    frames = options["Spider"]
+    frames = options["Hornet"]
 
     # Charakter-Variablen
     sprite_rect = frames["stand"][0].get_rect(centerx=display_width // 2, bottom=display_height // 2)

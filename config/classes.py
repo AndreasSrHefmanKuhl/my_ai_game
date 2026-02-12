@@ -17,3 +17,11 @@ class Bullet:
     def draw(self, surface):
         """Zeichnet die Kugel auf das Display."""
         pygame.draw.rect(surface, self.color, self.rect)
+
+class Enemy:
+
+    def __init__(self,x,y,direction):
+        self.rect = pygame.rect
+
+    def update(self,dt):
+        self.rect.x
