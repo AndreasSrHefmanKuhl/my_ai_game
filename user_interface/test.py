@@ -59,7 +59,7 @@ class Tile:
 
 
 # ----------------------------------------------------------------------
-#  HILFSFUNKTIONEN (NAMEN BEIBEHALTEN)
+#  HILFSFUNKTIONEN
 # ----------------------------------------------------------------------
 
 def get_sprite(sheet, x, y, width, height):
