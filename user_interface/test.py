@@ -99,7 +99,7 @@ def load_robot(path, frame_w=16, frame_h=16, scale=4):
 
 def main():
     pygame.init()
-    display, display_width, display_height = set_display(960, 540, "Robot Warfare - Animation Fix")
+    display, display_width, display_height = set_display(1080, 960, "Robot Warfare - Animation Fix")
 
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     ASSETS = os.path.normpath(os.path.join(BASE_DIR, "..", "assets", "Robot Warfare Asset Pack 22-11-24"))
@@ -112,14 +112,14 @@ def main():
 
     all_tile_images = load_tileset(TILESET_PATH, 16, 48)
 
-    # HIER INDIVIDUELLEN GRÖSSEN ANGEBEN:
+    # HIER GRÖSSEN ANGEBEN:
     scarab_data = load_robot(SCARAB_PATH, 16, 16, 4)
     wasp_data = load_robot(WASP_PATH, 16, 16, 4)
     hornet_data = load_robot(HORNET_PATH, 22, 20, 4)  # Hornet ist die Ausnahme
 
     level_data = [
         [10, 10, 10, 10, 10, 10, 10, 10, 10, 10,10,10,10,10,10,10,10,10,10,10],
-        [10,1, 1, 1, 1, 1, 1, 1, 1,1,1,1,1,1,1,1,1,1,1,10],
+        [10,1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 10],
         [10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 10],
         [10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 10],
         [10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 10],
@@ -127,7 +127,8 @@ def main():
         [10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 10],
         [10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 10],
         [10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 10],
-        [10, 10, 10, 10, 10, 10, 10, 10, 10, 10,10,10,10,10,10,10,10,10,10,10],
+        [10, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 10],
+        [10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10]
         ]
 
     START_POS = (100, 48)
@@ -136,7 +137,7 @@ def main():
         for c_idx, t_idx in enumerate(row):
             if t_idx != -1:
                 level_tiles.append(
-                    Tile(c_idx * 48, r_idx * 48, 48, all_tile_images[t_idx], (6 <= t_idx <= 15), (t_idx >= 20)))
+                    Tile(c_idx * 48, r_idx * 48, 48, all_tile_images[t_idx], (25 <= t_idx <= 30), (31 <= t_idx >= 35)))
 
     sprite_rect = scarab_data["stand"].get_rect(topleft=START_POS)
 
