@@ -112,7 +112,7 @@ def main():
 
     all_tile_images = load_tileset(TILESET_PATH, 16, 48)
 
-    # HIER DIE INDIVIDUELLEN GRÖSSEN ANGEBEN:
+    # HIER INDIVIDUELLEN GRÖSSEN ANGEBEN:
     scarab_data = load_robot(SCARAB_PATH, 16, 16, 4)
     wasp_data = load_robot(WASP_PATH, 16, 16, 4)
     hornet_data = load_robot(HORNET_PATH, 22, 20, 4)  # Hornet ist die Ausnahme
