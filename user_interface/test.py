@@ -1,199 +1,215 @@
 import os
 import pygame
-from config.DataRepo import set_display, get_asset_path
-from config import classes
-
+from config.DataRepo import set_display
 
 
 # ----------------------------------------------------------------------
-#  KONSTANTEN & PFAD-DEFINITIONEN
+#  KLASSEN DEFINITIONEN
 # ----------------------------------------------------------------------
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+class Bullet:
+    def __init__(self, x, y, direction):
+        self.rect = pygame.Rect(x, y, 12, 4)
+        self.color = (255, 200, 0)
+        self.speed = 600
+        self.direction = direction
+
+    def update(self, dt):
+        self.rect.x += self.speed * dt * self.direction
+
+    def draw(self, surface):
+        pygame.draw.rect(surface, self.color, self.rect)
 
 
-# Pfade zu den Assets
+class Enemy:
+    def __init__(self, x, y, frames, speed=100, distance=200):
+        self.frames = frames
+        self.rect = self.frames[0].get_rect(topleft=(x, y))
+        self.start_x = x
+        self.distance = distance
+        self.speed = speed
+        self.direction = 1
+        self.anim_index = 0.0
+
+    def update(self, dt):
+        self.rect.x += self.speed * dt * self.direction
+        if self.rect.x >= self.start_x + self.distance:
+            self.direction = -1
+        elif self.rect.x <= self.start_x:
+            self.direction = 1
+        self.anim_index += dt * 6
+
+    def draw(self, surface):
+        idx = int(self.anim_index) % len(self.frames)
+        img = self.frames[idx]
+        if self.direction == 1:
+            img = pygame.transform.flip(img, True, False)
+        surface.blit(img, self.rect)
 
 
-SCARAB_PATH = get_asset_path("Scarab.png",BASE_DIR)
-SPIDER_PATH = get_asset_path("Spider.png",BASE_DIR)
-WASP_PATH = get_asset_path("Wasp.png",BASE_DIR)
-HORNET_PATH = get_asset_path("Hornet.png",BASE_DIR)
+class Tile:
+    def __init__(self, x, y, size, image, is_wall=False, is_deadly=False):
+        self.rect = pygame.Rect(x, y, size, size)
+        self.image = image
+        self.is_wall = is_wall
+        self.is_deadly = is_deadly
 
-SPRITE_WIDTH = 22
-SPRITE_HEIGHT = 24
-Y_POS_ROW_WALK = 0
-Y_POS_ROW_STAND = 0
-NUM_FRAMES = 2
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
 
-SCALE_FACTOR = 8
-MAX_MOVEMENT_SPEED_PIXELS_PER_SECOND = 150
-ANIMATION_SPEED = 0.12
-
-# Schuss-Einstellungen
-BULLET_COOLDOWN = 0.15 # Sekunden zwischen den Schüssen
-Bullet = classes.Bullet
 
 # ----------------------------------------------------------------------
-#   HILFSFUNKTIONEN
+#  HILFSFUNKTIONEN (NAMEN BEIBEHALTEN)
 # ----------------------------------------------------------------------
 
 def get_sprite(sheet, x, y, width, height):
+    """Extrahiert einen präzisen Ausschnitt."""
     sprite = pygame.Surface([width, height], pygame.SRCALPHA)
-    source_rect = pygame.Rect(x, y, width, height)
-    sprite.blit(sheet, (0, 0), source_rect)
+    sprite.blit(sheet, (0, 0), pygame.Rect(x, y, width, height))
     return sprite
 
 
-def load_and_scale_frames(sheet_path):
-    try:
-        sprite_sheet = pygame.image.load(sheet_path).convert_alpha()
-    except pygame.error as e:
-        print(f"Fehler beim Laden: {sheet_path}, {e}")
-        pygame.quit()
-        exit()
+def load_tileset(path, source_size, target_size):
+    sheet = pygame.image.load(path).convert_alpha()
+    tiles = []
+    for y in range(0, sheet.get_height(), source_size):
+        for x in range(0, sheet.get_width(), source_size):
+            img = get_sprite(sheet, x, y, source_size, source_size)
+            tiles.append(pygame.transform.scale(img, (target_size, target_size)))
+    return tiles
 
-    walk_frames = []
-    for i in range(NUM_FRAMES):
-        frame = get_sprite(sprite_sheet, i * SPRITE_WIDTH, Y_POS_ROW_WALK, SPRITE_WIDTH, SPRITE_HEIGHT)
-        scaled = pygame.transform.scale(frame, (SPRITE_WIDTH * SCALE_FACTOR, SPRITE_HEIGHT * SCALE_FACTOR))
-        walk_frames.append(scaled)
 
-    stand_frame = get_sprite(sprite_sheet, 0, Y_POS_ROW_STAND, SPRITE_WIDTH, SPRITE_HEIGHT)
-    scaled_stand = pygame.transform.scale(stand_frame, (SPRITE_WIDTH * SCALE_FACTOR, SPRITE_HEIGHT * SCALE_FACTOR))
+def load_robot(path, frame_w=16, frame_h=16, scale=4):
+    """
+    Lädt die ersten 2 Frames eines Roboters.
+    Standardmäßig 16x16, für Hornet beim Aufruf 22x20 angeben.
+    """
+    sheet = pygame.image.load(path).convert_alpha()
+    # Nur die ersten zwei Frames für die Flug-Animation
+    f1 = get_sprite(sheet, 0, 0, frame_w, frame_h)
+    f2 = get_sprite(sheet, frame_w, 0, frame_w, frame_h)
 
-    return {"walk": tuple(walk_frames), "stand": (scaled_stand,)}
+    frames = [pygame.transform.scale(f, (frame_w * scale, frame_h * scale)) for f in (f1, f2)]
+    return {"walk": tuple(frames), "stand": frames[0]}
 
 
 # ----------------------------------------------------------------------
-#  HAUPTPROGRAMM
+#  MAIN PROGRAMM
 # ----------------------------------------------------------------------
 
 def main():
-    if not pygame.get_init():
-        pygame.init()
+    pygame.init()
+    display, display_width, display_height = set_display(960, 540, "Robot Warfare - Animation Fix")
 
-    DEBUG_MODE = True
-    font = pygame.font.Font(None, 20) if pygame.font.get_init() else None
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    ASSETS = os.path.normpath(os.path.join(BASE_DIR, "..", "assets", "Robot Warfare Asset Pack 22-11-24"))
 
-    display, display_width, display_height = set_display(800, 400, "Robot Combat Test")
+    TILESET_PATH = os.path.join(ASSETS, "Tileset", "tileset_compressed.png")
+    SCARAB_PATH = os.path.join(ASSETS, "Robots", "Scarab.png")
+    HORNET_PATH = os.path.join(ASSETS, "Robots", "Hornet.png")
+    WASP_PATH = os.path.join(ASSETS, "Robots", "Wasp.png")
 
-    options = {
-        "Scarab": load_and_scale_frames(SCARAB_PATH),
-        "Spider": load_and_scale_frames(SPIDER_PATH),
-        "Wasp": load_and_scale_frames(WASP_PATH),
-        "Hornet": load_and_scale_frames(HORNET_PATH),
-    }
-    frames = options["Hornet"]
+    # Präzises Laden mit den korrekten Maßen
+    all_tile_images = load_tileset(TILESET_PATH, 16, 48)
 
-    # Charakter-Variablen
-    sprite_rect = frames["stand"][0].get_rect(centerx=display_width // 2, bottom=display_height // 2)
-    facing_right = True
-    current_frame_index = 0.0
+    # HIER DIE INDIVIDUELLEN GRÖSSEN ANGEBEN:
+    scarab_data = load_robot(SCARAB_PATH, 16, 16, 4)
+    wasp_data = load_robot(WASP_PATH, 16, 16, 4)
+    hornet_data = load_robot(HORNET_PATH, 22, 20, 4)  # Hornet ist die Ausnahme
 
-    # Projektil-Variablen
+    level_data = [
+        [10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+        [10, -1, -1, -1, -1, -1, -1, -1, -1, 10],
+        [10, -1, 12, 12, -1, -1, -1, -1, -1, 10],
+        [10, 20, 20, 20, 20, 20, 20, 20, 20, 10],
+        [10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+    ]
+
+    START_POS = (100, 48)
+    level_tiles = []
+    for r_idx, row in enumerate(level_data):
+        for c_idx, t_idx in enumerate(row):
+            if t_idx != -1:
+                level_tiles.append(
+                    Tile(c_idx * 48, r_idx * 48, 48, all_tile_images[t_idx], (6 <= t_idx <= 15), (t_idx >= 20)))
+
+    sprite_rect = scarab_data["stand"].get_rect(topleft=START_POS)
+
+    # Gegner mit den korrekten "walk" frames aus der robot_data
+    enemies = [
+        Enemy(400, 48, hornet_data["walk"], speed=120, distance=200),
+        Enemy(200, 96, wasp_data["walk"], speed=80, distance=100)
+    ]
+
     bullets = []
-    shoot_cooldown_timer = 0.0
-
-    # Steuerungs-Flags
-    moving_keys = {"left": False, "right": False, "up": False, "down": False}
-    is_shooting = False
-
+    facing_right = True
+    moving = {"L": False, "R": False, "U": False, "D": False}
+    shoot_cooldown = 0
     clock = pygame.time.Clock()
-    running = True
 
-    while running:
-        dt = clock.tick(60) / 1000.0  # Delta Time in Sekunden
+    while True:
+        dt = clock.tick(60) / 1000.0
+        if shoot_cooldown > 0: shoot_cooldown -= dt
 
-        # --- EVENT HANDLING ---
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            elif event.type == pygame.KEYDOWN:
-                if event.key in (pygame.K_ESCAPE, pygame.K_q):
-                    running = False
-                if event.key == pygame.K_LEFT:
-                    moving_keys["left"] = True
-                    facing_right = False
-                if event.key == pygame.K_RIGHT:
-                    moving_keys["right"] = True
-                    facing_right = True
-                if event.key == pygame.K_UP:    moving_keys["up"] = True
-                if event.key == pygame.K_DOWN:  moving_keys["down"] = True
-                if event.key == pygame.K_SPACE: is_shooting = True
-                if event.key == pygame.K_d:     DEBUG_MODE = not DEBUG_MODE
+            if event.type == pygame.QUIT: return
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:  moving["L"], facing_right = True, False
+                if event.key == pygame.K_RIGHT: moving["R"], facing_right = True, True
+                if event.key == pygame.K_UP:    moving["U"] = True
+                if event.key == pygame.K_DOWN:  moving["D"] = True
+                if event.key == pygame.K_SPACE and shoot_cooldown <= 0:
+                    bullets.append(Bullet(sprite_rect.centerx, sprite_rect.centery, 1 if facing_right else -1))
+                    shoot_cooldown = 0.3
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_LEFT:  moving["L"] = False
+                if event.key == pygame.K_RIGHT: moving["R"] = False
+                if event.key == pygame.K_UP:    moving["U"] = False
+                if event.key == pygame.K_DOWN:  moving["D"] = False
 
-            elif event.type == pygame.KEYUP:
-                if event.key == pygame.K_LEFT:  moving_keys["left"] = False
-                if event.key == pygame.K_RIGHT: moving_keys["right"] = False
-                if event.key == pygame.K_UP:    moving_keys["up"] = False
-                if event.key == pygame.K_DOWN:  moving_keys["down"] = False
-                if event.key == pygame.K_SPACE: is_shooting = False
+        # Spieler Bewegung & Wand-Kollision
+        old_x = sprite_rect.x
+        if moving["L"]: sprite_rect.x -= 250 * dt
+        if moving["R"]: sprite_rect.x += 250 * dt
+        for t in level_tiles:
+            if t.is_wall and sprite_rect.colliderect(t.rect): sprite_rect.x = old_x
 
-        # --- UPDATE LOGIK ---
+        old_y = sprite_rect.y
+        if moving["U"]: sprite_rect.y -= 250 * dt
+        if moving["D"]: sprite_rect.y += 250 * dt
+        for t in level_tiles:
+            if t.is_wall and sprite_rect.colliderect(t.rect): sprite_rect.y = old_y
+            if t.is_deadly and sprite_rect.colliderect(t.rect): sprite_rect.topleft = START_POS
 
-        #  Bewegung und speichern des aktuellen zustandes
-        dist = MAX_MOVEMENT_SPEED_PIXELS_PER_SECOND * dt
-        if moving_keys["left"]:  sprite_rect.x -= dist
-        if moving_keys["right"]: sprite_rect.x += dist
-        if moving_keys["up"]:    sprite_rect.y -= dist
-        if moving_keys["down"]:  sprite_rect.y += dist
+        # Gegner & Kugeln
+        for e in enemies:
+            e.update(dt)
+            if sprite_rect.colliderect(e.rect): sprite_rect.topleft = START_POS
 
-        # Bildschirm-Grenzen
-        sprite_rect.clamp_ip(pygame.Rect(0, 0, display_width, 350))  # Vereinfachte Begrenzung
+        for b in bullets[:]:
+            b.update(dt)
+            if any(t.rect.colliderect(b.rect) for t in level_tiles if t.is_wall):
+                bullets.remove(b)
+                continue
+            for e in enemies[:]:
+                if b.rect.colliderect(e.rect):
+                    enemies.remove(e)
+                    if b in bullets: bullets.remove(b)
 
+        # Rendering
+        display.fill((30, 30, 35))
+        for t in level_tiles: t.draw(display)
+        for b in bullets: b.draw(display)
+        for e in enemies: e.draw(display)
 
-        if shoot_cooldown_timer > 0:
-            shoot_cooldown_timer -= dt
-
-        if is_shooting and shoot_cooldown_timer <= 0:
-            bullet_dir = 1 if facing_right else -1
-            # Kugel startet etwas versetzt vom Zentrum des Roboters
-            start_x = sprite_rect.right if facing_right else sprite_rect.left
-            new_bullet = Bullet(start_x, sprite_rect.centery, bullet_dir)
-            bullets.append(new_bullet)
-            shoot_cooldown_timer = BULLET_COOLDOWN
-
-        #  Projektile updaten
-        for bullet in bullets[:]:
-            bullet.update(dt)
-            if bullet.rect.x < 0 or bullet.rect.x > display_width:
-                bullets.remove(bullet)
-
-        #  Animation
-        is_moving = any(moving_keys.values())
-        if is_moving:
-            current_frame_index += dt / ANIMATION_SPEED
-            if current_frame_index >= len(frames["walk"]):
-                current_frame_index = 0
-            current_frame = frames["walk"][int(current_frame_index)]
-        else:
-            current_frame = frames["stand"][0]
-
-        if not facing_right:
-            current_frame = pygame.transform.flip(current_frame, True, False)
-
-        # --- RENDERING ---
-        display.fill((50, 65, 70))
-
-        # Kugeln zeichnen
-        for bullet in bullets:
-            bullet.draw(display)
-
-        # Charakter zeichnen
-        display.blit(current_frame, sprite_rect)
-
-        # Debug Infos
-        if DEBUG_MODE:
-            pygame.draw.rect(display, (255, 0, 0), sprite_rect, 1)
-            if font:
-                fps = clock.get_fps()
-                debug_txt = font.render(f"FPS: {fps:.1f} | Bullets: {len(bullets)}", True, (255, 255, 255))
-                display.blit(debug_txt, (10, 10))
+        # Scarab Animation
+        is_moving = any(moving.values())
+        p_idx = int(pygame.time.get_ticks() / 150) % 2
+        img = scarab_data["walk"][p_idx] if is_moving else scarab_data["stand"]
+        if not facing_right: img = pygame.transform.flip(img, True, False)
+        display.blit(img, sprite_rect)
 
         pygame.display.update()
-
-    pygame.quit()
 
 
 if __name__ == "__main__":
