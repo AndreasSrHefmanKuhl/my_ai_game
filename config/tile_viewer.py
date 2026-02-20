@@ -81,18 +81,18 @@ def show_tile_indices(tileset_path, source_size=16):
 # ----------------------------------------------------------------------
 
 if __name__ == "__main__":
-    # 1. Wo bin ich?
+    #  Wo bin ich?
     script_dir = os.path.dirname(os.path.abspath(__file__))
     print(f"\n1. Skript-Standort: {script_dir}")
 
-    # 2. Gehe eine Ebene hoch zum Hauptverzeichnis
+    # Gehe eine Ebene hoch zum Hauptverzeichnis
     base_dir = os.path.abspath(os.path.join(script_dir, ".."))
     print(f"2. Hauptverzeichnis (base_dir): {base_dir}")
 
-    # 3. Liste alle Ordner im Hauptverzeichnis auf (zum Abgleichen)
+    # Liste alle Ordner im Hauptverzeichnis auf (zum Abgleichen)
     print(f"3. Ordner im Hauptverzeichnis: {os.listdir(base_dir)}")
 
-    # 4. Baue den Zielpfad Schritt für Schritt
+    #
     # Prüfe hier die Schreibweise! (Ist es 'Assets' oder 'assets'?)
     target_rel_path = os.path.join("assets", "Robot Warfare Asset Pack 22-11-24", "Tileset", "tileset_compressed.png")
     final_path = os.path.join(base_dir, target_rel_path)
