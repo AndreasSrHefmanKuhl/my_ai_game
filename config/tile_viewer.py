@@ -100,7 +100,7 @@ if __name__ == "__main__":
 
     print(f"4. Vollständiger Zielpfad: {final_path}")
 
-    # 5. Letzter Check & Start
+    # Letzter Check & Start
     if os.path.exists(final_path):
         print("\n[ERFOLG] Datei gefunden! Starte Viewer...")
         show_tile_indices(final_path)
