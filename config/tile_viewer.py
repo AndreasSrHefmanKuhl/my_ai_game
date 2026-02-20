@@ -85,7 +85,7 @@ if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
     print(f"\n1. Skript-Standort: {script_dir}")
 
-    # Gehe eine Ebene hoch zum Hauptverzeichnis
+    # eine Ebene hoch zum Hauptverzeichnis
     base_dir = os.path.abspath(os.path.join(script_dir, ".."))
     print(f"2. Hauptverzeichnis (base_dir): {base_dir}")
 
