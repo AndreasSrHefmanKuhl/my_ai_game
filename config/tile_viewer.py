@@ -20,7 +20,7 @@ def show_tile_indices(tileset_path, source_size=16):
     display_w = 900
     display_h = 700
     screen = pygame.display.set_mode((display_w, display_h))
-    pygame.display.set_caption("Tile Index Viewer - Mausrad zum Scrollen")
+    pygame.display.set_caption("Tile Index Viewer ")
 
     # 2. DANACH das Bild laden und konvertieren
     try:
