@@ -93,7 +93,7 @@ if __name__ == "__main__":
     print(f"3. Ordner im Hauptverzeichnis: {os.listdir(base_dir)}")
 
     #
-    # Prüfe hier die Schreibweise! (Ist es 'Assets' oder 'assets'?)
+    # Prüfe  Schreibweise! (Ist es 'Assets' oder 'assets'?)
     target_rel_path = os.path.join("assets", "Robot Warfare Asset Pack 22-11-24", "Tileset", "tileset_compressed.png")
     final_path = os.path.join(base_dir, target_rel_path)
     final_path = os.path.normpath(final_path)
