@@ -12,13 +12,13 @@ def get_sprite(sheet, x, y, width, height):
     return sprite
 
 
-def show_tile_indices(tileset_path, source_size=16):
+def show_tile_indices(tileset_path, source_size=32):
     pygame.init()
 
     # 1. ERST das Fenster erstellen
     zoom = 3
-    display_w = 900
-    display_h = 700
+    display_w = 1600
+    display_h = 1400
     screen = pygame.display.set_mode((display_w, display_h))
     pygame.display.set_caption("Tile Index Viewer ")
 
@@ -94,7 +94,7 @@ if __name__ == "__main__":
 
     #
     # Prüfe  Schreibweise! (Ist es 'Assets' oder 'assets'?)
-    target_rel_path = os.path.join("assets", "Robot Warfare Asset Pack 22-11-24", "Tileset", "tileset_compressed.png")
+    target_rel_path = os.path.join("assets","Vania","SPRITES", "player","spritesheet", "player.png")
     final_path = os.path.join(base_dir, target_rel_path)
     final_path = os.path.normpath(final_path)
 
