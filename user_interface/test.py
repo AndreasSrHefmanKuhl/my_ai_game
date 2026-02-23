@@ -1,125 +1,75 @@
 import os
 import pygame
-from config.DataRepo import set_display
+from config.classes import Player, Tile, Enemy, Bullet
+from config.DataRepo import set_display, load_all_animations, load_tileset
 
 
-# ----------------------------------------------------------------------
-#  KLASSEN DEFINITIONEN
-# ----------------------------------------------------------------------
-
-class Bullet:
-    def __init__(self, x, y, direction):
-        self.rect = pygame.Rect(x, y, 12, 4)
-        self.color = (255, 200, 0)
-        self.speed = 600
-        self.direction = direction
-
-    def update(self, dt):
-        self.rect.x += self.speed * dt * self.direction
-
-    def draw(self, surface):
-        pygame.draw.rect(surface, self.color, self.rect)
-
-
-class Enemy:
-    def __init__(self, x, y, frames, speed=100, distance=200):
-        self.frames = frames
-        self.rect = self.frames[0].get_rect(topleft=(x, y))
-        self.start_x = x
-        self.distance = distance
-        self.speed = speed
-        self.direction = 1
-        self.anim_index = 0.0
-
-    def update(self, dt):
-        self.rect.x += self.speed * dt * self.direction
-        if self.rect.x >= self.start_x + self.distance:
-            self.direction = -1
-        elif self.rect.x <= self.start_x:
-            self.direction = 1
-        self.anim_index += dt * 6
-
-    def draw(self, surface):
-        idx = int(self.anim_index) % len(self.frames)
-        img = self.frames[idx]
-        if self.direction == 1:
-            img = pygame.transform.flip(img, True, False)
-        surface.blit(img, self.rect)
-
-
-class Tile:
-    def __init__(self, x, y, size, image, is_wall=False, is_deadly=False):
-        self.rect = pygame.Rect(x, y, size, size)
-        self.image = image
-        self.is_wall = is_wall
-        self.is_deadly = is_deadly
-
-    def draw(self, surface):
-        surface.blit(self.image, self.rect)
-
-
-# ----------------------------------------------------------------------
-#  HILFSFUNKTIONEN
-# ----------------------------------------------------------------------
-
-def get_sprite(sheet, x, y, width, height):
-    """Extrahiert einen präzisen Ausschnitt."""
-    sprite = pygame.Surface([width, height], pygame.SRCALPHA)
-    sprite.blit(sheet, (0, 0), pygame.Rect(x, y, width, height))
-    return sprite
-
-
-def load_tileset(path, source_size, target_size):
-    sheet = pygame.image.load(path).convert_alpha()
-    tiles = []
-    for y in range(0, sheet.get_height(), source_size):
-        for x in range(0, sheet.get_width(), source_size):
-            img = get_sprite(sheet, x, y, source_size, source_size)
-            tiles.append(pygame.transform.scale(img, (target_size, target_size)))
-    return tiles
-
-
-def load_robot(path, frame_w=16, frame_h=16, scale=4):
+def _ensure_anim_key(anim_dict: dict, required_key: str, fallback_key: str = "stand") -> dict:
     """
-    Lädt die ersten 2 Frames eines Roboters.
-    Standardmäßig 16x16, für Hornet beim Aufruf 22x20 angeben.
+    Ensures anim_dict contains required_key.
+    - If required_key exists: return as-is.
+    - Else if fallback_key exists: alias required_key -> fallback_key frames.
+    - Else if any key exists: alias required_key -> first available frames.
+    - Else: return empty dict.
     """
-    sheet = pygame.image.load(path).convert_alpha()
-    # Nur die ersten zwei Frames für die Flug-Animation
-    f1 = get_sprite(sheet, 0, 0, frame_w, frame_h)
-    f2 = get_sprite(sheet, frame_w, 0, frame_w, frame_h)
+    if not anim_dict:
+        return {}
+    if required_key in anim_dict:
+        return anim_dict
+    if fallback_key in anim_dict:
+        anim_dict = dict(anim_dict)
+        anim_dict[required_key] = anim_dict[fallback_key]
+        return anim_dict
+    first_key = next(iter(anim_dict.keys()))
+    anim_dict = dict(anim_dict)
+    anim_dict[required_key] = anim_dict[first_key]
+    return anim_dict
 
-    frames = [pygame.transform.scale(f, (frame_w * scale, frame_h * scale)) for f in (f1, f2)]
-    return {"walk": tuple(frames), "stand": frames[0]}
-
-
-# ----------------------------------------------------------------------
-#  MAIN PROGRAMM
-# ----------------------------------------------------------------------
 
 def main():
+    """Initializes game, loads assets, and handles the main game loop."""
     pygame.init()
-    display, display_width, display_height = set_display(1080, 960, "Robot Warfare - Animation Fix")
+    display, display_width, display_height = set_display(1080, 960, "Robot Warfare")
 
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    ASSETS = os.path.normpath(os.path.join(BASE_DIR, "..", "assets", "Robot Warfare Asset Pack 22-11-24"))
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    assets_robots = os.path.normpath(os.path.join(base_dir, "..", "assets", "Robot Warfare Asset Pack 22-11-24"))
+    assets_vania = os.path.normpath(os.path.join(base_dir, "..", "assets", "Vania"))
 
-    TILESET_PATH = os.path.join(ASSETS, "Tileset", "tileset_compressed.png")
-    SCARAB_PATH = os.path.join(ASSETS, "Robots", "Scarab.png")
-    HORNET_PATH = os.path.join(ASSETS, "Robots", "Hornet.png")
-    WASP_PATH = os.path.join(ASSETS, "Robots", "Wasp.png")
+    scarab_path = os.path.join(assets_robots, "Robots", "Scarab")
+    hornet_path = os.path.join(assets_robots, "Robots", "Hornet")
+    wasp_path = os.path.join(assets_robots, "Robots", "Wasp")
+    tileset_path = os.path.join(assets_robots, "Tileset", "tileset_compressed.png")
 
+    # Folder name in your project is "SPRITES" (uppercase)
+    player_path = os.path.join(assets_vania, "SPRITES", "player", "idle")
+    wizard_path = os.path.join(assets_vania, "SPRITES", "wizard", "idle-sprites")
+    angel_path = os.path.join(assets_vania, "SPRITES", "angel", "sprites", "idle")
 
-    all_tile_images = load_tileset(TILESET_PATH, 16, 48)
+    scarab_data = load_all_animations(scarab_path, scale_factor=4)
+    hornet_data = load_all_animations(hornet_path, scale_factor=4)
+    wasp_data = load_all_animations(wasp_path, scale_factor=4)
+    player_data = load_all_animations(player_path, scale_factor=4)
+    wizard_data = load_all_animations(wizard_path, scale_factor=4)
+    angel_data = load_all_animations(angel_path, scale_factor=4)
 
-    # HIER GRÖSSEN ANGEBEN:
-    scarab_data = load_robot(SCARAB_PATH, 16, 16, 4)
-    wasp_data = load_robot(WASP_PATH, 16, 16, 4)
-    hornet_data = load_robot(HORNET_PATH, 22, 20, 4)  # Hornet ist die Ausnahme
+    player_data = _ensure_anim_key(player_data, required_key="stand")
+    player_data = _ensure_anim_key(player_data, required_key="walk", fallback_key="stand")
+    player_data = _ensure_anim_key(player_data, required_key= "punch", fallback_key="stand")
+    player_data = _ensure_anim_key(player_data, required_key= "kick", fallback_key="stand")
 
-    level_data = [
-        [10, 10, 10, 10, 10, 10, 10, 10, 10, 10,10,10,10,10,10,10,10,10,10,10],
-        [10,1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 10],
+    wizard_data = _ensure_anim_key(wizard_data, required_key="walk", fallback_key="stand")
+    angel_data = _ensure_anim_key(angel_data, required_key="walk", fallback_key="stand")
+
+    if not player_data or "stand" not in player_data:
+        raise FileNotFoundError(f"Player animations not found/loaded from: {player_path}")
+    if not wizard_data or "walk" not in wizard_data:
+        raise FileNotFoundError(f"Wizard animations not found/loaded from: {wizard_path}")
+
+    all_tile_images = load_tileset(tileset_path, 16, 48)
+
+    level_map = [
+        [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+        [10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 10],
         [10, 1, 1, 1, 1, 1, 154, 1, 1, 1, 1, 1, 1, 1, 1, 1, 153, 1, 1, 10],
         [10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 10],
         [10, 1, 153, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 138, 139, 1, 1, 1, 10],
@@ -127,70 +77,91 @@ def main():
         [10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 154, 1, 1, 1, 1, 1, 1, 1, 10],
         [10, 1, 1, 1, 142, 143, 144, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 10],
         [10, 1, 1, 1, 145, 146, 147, 1, 1, 1, 1, 1, 1, 153, 1, 1, 1, 1, 1, 10],
-        [10, 1, 1, 1, 148, 149, 150, 1, 1,1, 1, 1, 1, 1, 1,1, 1, 1, 1, 10],
-        [10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10]
-        ]
-
-    START_POS = (100, 48)
-    level_tiles = []
-    for r_idx, row in enumerate(level_data):
-        for c_idx, t_idx in enumerate(row):
-            if t_idx != -1:
-                level_tiles.append(
-                    Tile(c_idx * 48, r_idx * 48, 48, all_tile_images[t_idx], (10 <= t_idx <= 11 or 138 <= t_idx <= 150), (12 <= t_idx <= 14)))
-
-    sprite_rect = scarab_data["stand"].get_rect(topleft=START_POS)
-
-    # Gegner mit den korrekten "walk" frames aus der robot_data
-    enemies = [
-        Enemy(400, 48, hornet_data["walk"], speed=120, distance=200),
-        Enemy(200, 96, wasp_data["walk"], speed=80, distance=100)
+        [10, 1, 1, 1, 148, 149, 150, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 10],
+        [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
     ]
 
+    start_pos = (100, 48)
+    level_tiles = []
+    for r_idx, row in enumerate(level_map):
+        for c_idx, t_idx in enumerate(row):
+            if t_idx != -1:
+                if t_idx < 0 or t_idx >= len(all_tile_images):
+                    continue
+                is_wall = (10 <= t_idx <= 11 or 138 <= t_idx <= 150)
+                is_deadly = (12 <= t_idx <= 14)
+                level_tiles.append(Tile(c_idx * 48, r_idx * 48, 48, all_tile_images[t_idx], is_wall, is_deadly))
+
+    player = Player(start_pos[0], start_pos[1], player_data)
+
+
+    wizard = Enemy(200, 0, wizard_data)
+    angel = Enemy(200,0, angel_data)
+
+
+    enemies = [wizard,angel]
+
     bullets = []
-    facing_right = True
-    moving = {"L": False, "R": False, "U": False, "D": False}
-    shoot_cooldown = 0
+    move_cooldown = 0.0
     clock = pygame.time.Clock()
 
-    while True:
+    running = True
+    while running:
         dt = clock.tick(60) / 1000.0
-        if shoot_cooldown > 0: shoot_cooldown -= dt
+        move_cooldown = max(0.0, move_cooldown - dt)
+
+        kick_pressed = False
+        punch_pressed = False
 
         for event in pygame.event.get():
-            if event.type == pygame.QUIT: return
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:  moving["L"], facing_right = True, False
-                if event.key == pygame.K_RIGHT: moving["R"], facing_right = True, True
-                if event.key == pygame.K_UP:    moving["U"] = True
-                if event.key == pygame.K_DOWN:  moving["D"] = True
-                if event.key == pygame.K_SPACE and shoot_cooldown <= 0:
-                    bullets.append(Bullet(sprite_rect.centerx, sprite_rect.centery, 1 if facing_right else -1))
-                    shoot_cooldown = 0.3
-            if event.type == pygame.KEYUP:
-                if event.key == pygame.K_LEFT:  moving["L"] = False
-                if event.key == pygame.K_RIGHT: moving["R"] = False
-                if event.key == pygame.K_UP:    moving["U"] = False
-                if event.key == pygame.K_DOWN:  moving["D"] = False
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_w:
+                kick_pressed = True
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_s:
+                punch_pressed = True
 
-        # Spieler Bewegung & Wand-Kollision
-        old_x = sprite_rect.x
-        if moving["L"]: sprite_rect.x -= 250 * dt
-        if moving["R"]: sprite_rect.x += 250 * dt
+        keys = pygame.key.get_pressed()
+        dx, dy, state = 0, 0, "stand"
+
+        if keys[pygame.K_LEFT]:
+            dx, state = -250, "walk"
+        elif keys[pygame.K_RIGHT]:
+            dx, state = 250, "walk"
+        if keys[pygame.K_UP]:
+            dy = -250
+        if keys[pygame.K_DOWN]:
+            dy = 250
+
+        if kick_pressed and move_cooldown <= 0 :
+            move_cooldown = 0.3
+            player.change_state("kick")
+        elif punch_pressed and move_cooldown <= 0:
+            move_cooldown = 0.2
+            player.change_state("punch")
+        else:
+            player.change_state(state)
+
+        old_x = player.rect.x
+        player.rect.x += dx * dt
+        for t in [tile for tile in level_tiles if tile.is_wall]:
+            if player.rect.colliderect(t.rect):
+                player.rect.x = old_x
+
+        old_y = player.rect.y
+        player.rect.y += dy * dt
         for t in level_tiles:
-            if t.is_wall and sprite_rect.colliderect(t.rect): sprite_rect.x = old_x
+            if t.is_wall and player.rect.colliderect(t.rect):
+                player.rect.y = old_y
+            if t.is_deadly and player.rect.colliderect(t.rect):
+                player.rect.topleft = start_pos
 
-        old_y = sprite_rect.y
-        if moving["U"]: sprite_rect.y -= 250 * dt
-        if moving["D"]: sprite_rect.y += 250 * dt
-        for t in level_tiles:
-            if t.is_wall and sprite_rect.colliderect(t.rect): sprite_rect.y = old_y
-            if t.is_deadly and sprite_rect.colliderect(t.rect): sprite_rect.topleft = START_POS
+        player.update(dt, dx)
 
-        # Gegner & Kugeln
         for e in enemies:
             e.update(dt)
-            if sprite_rect.colliderect(e.rect): sprite_rect.topleft = START_POS
+            if player.rect.colliderect(e.rect):
+                player.rect.topleft = start_pos
 
         for b in bullets[:]:
             b.update(dt)
@@ -200,22 +171,21 @@ def main():
             for e in enemies[:]:
                 if b.rect.colliderect(e.rect):
                     enemies.remove(e)
-                    if b in bullets: bullets.remove(b)
+                    if b in bullets:
+                        bullets.remove(b)
+                    break
 
-        # Rendering
         display.fill((30, 30, 35))
-        for t in level_tiles: t.draw(display)
-        for b in bullets: b.draw(display)
-        for e in enemies: e.draw(display)
-
-        # Scarab Animation
-        is_moving = any(moving.values())
-        p_idx = int(pygame.time.get_ticks() / 150) % 2
-        img = scarab_data["walk"][p_idx] if is_moving else scarab_data["stand"]
-        if not facing_right: img = pygame.transform.flip(img, True, False)
-        display.blit(img, sprite_rect)
-
+        for t in level_tiles:
+            t.draw(display)
+        for b in bullets:
+            b.draw(display)
+        for e in enemies:
+            e.draw(display)
+        display.blit(player.image, player.rect)
         pygame.display.update()
+
+    pygame.quit()
 
 
 if __name__ == "__main__":
