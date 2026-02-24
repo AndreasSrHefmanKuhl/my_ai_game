@@ -39,7 +39,7 @@ def load_all_animations(base_path, scale_factor=2):
     if not os.path.exists(base_path):
         return {}
 
-    # If there are PNGs directly in base_path, treat them as a default animation ("stand")
+    # If there are PNGs directly in base_path, treat them as a default animation
     direct_pngs = sorted([f for f in os.listdir(base_path) if f.lower().endswith(".png")])
     if direct_pngs:
         frames = []
@@ -52,7 +52,7 @@ def load_all_animations(base_path, scale_factor=2):
         if frames:
             animation_data["stand"] = tuple(frames)
 
-    # Scan subfolders (original behavior)
+    # Scan subfolders
     for category in os.listdir(base_path):
         category_path = os.path.join(base_path, category)
         if os.path.isdir(category_path):
