@@ -40,7 +40,7 @@ def main():
     wasp_path = os.path.join(assets_robots, "Robots", "Wasp")
     tileset_path = os.path.join(assets_robots, "Tileset", "tileset_compressed.png")
 
-    # Folder name in your project is "SPRITES" (uppercase)
+
     player_path = os.path.join(assets_vania, "SPRITES", "player", "idle")
     wizard_path = os.path.join(assets_vania, "SPRITES", "wizard", "idle-sprites")
     angel_path = os.path.join(assets_vania, "SPRITES", "angel", "sprites", "idle")
