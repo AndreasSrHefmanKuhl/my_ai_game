@@ -1,3 +1,5 @@
+from tkinter.ttk import Style
+
 import pygame
 
 
@@ -127,13 +129,16 @@ class Bullet:
 
 
 class Tile:
-    def __init__(self, x, y, size, image, is_wall=False, is_deadly=False):
-        # Das Tile ist statisch, braucht also nur ein Bild
+    def __init__(self, x, y, size, image, tile_type = "ground"):
+
         self.rect = pygame.Rect(x, y, size, size)
         self.image = image
-        self.is_wall = is_wall
-        self.is_deadly = is_deadly
+        self.tile_type = tile_type
+
+        self.is_wall = "wall" in tile_type or "solid" in tile_type
+        self.is_deadly = "lava" in tile_type or "spike" in tile_type
 
     def draw(self, surface):
         """Zeichnet den Boden/Wand."""
         surface.blit(self.image, self.rect)
+

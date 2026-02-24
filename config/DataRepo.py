@@ -73,6 +73,7 @@ def load_all_animations(base_path, scale_factor=2):
 
 def load_tile_library(path, size=10):
     """ function to load all tiles in a folder and name their keys as the file name"""
+
     tile_library = {}
 
     if not os.path.exists(path):
