@@ -1,6 +1,8 @@
 import os
 import pygame
 
+from config.classes import Tile
+
 
 def set_display(width, height, name):
     """Sets the window dimensions and title."""
@@ -86,3 +88,18 @@ def load_tile_library(path, size=10):
             tile_library[name] = pygame.transform.scale(img, (size, size))
 
     return tile_library
+
+def build_level(level_data,tile_library,tile_size=10):
+
+    level_tiles = []
+
+    for row_idx, row in enumerate(level_data):
+        for col_idx, tile_name in enumerate(row):
+            if tile_name in tile_library:
+                x = col_idx * tile_size
+                y = row_idx * tile_size
+                # Create Tile object with image from library
+                new_tile = Tile(x, y, tile_library[tile_name], tile_type=tile_name)
+                level_tiles.append(new_tile)
+
+    return level_tiles
