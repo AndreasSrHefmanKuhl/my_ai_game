@@ -70,3 +70,18 @@ def load_all_animations(base_path, scale_factor=2):
                 animation_data[category] = tuple(frames)
 
     return animation_data
+
+def load_tile_library(path, size=10):
+    """ function to load all tiles in a folder and name their keys as the file name"""
+    tile_library = {}
+
+    if not os.path.exists(path):
+        return {}
+
+    for file in os.listdir(path):
+        if file.endswith(".png"):
+            name = os.path.splitext(file)[0] # e.g floor_wooden...e
+            img = pygame.image.load(os.path.join(path, file)).convert_alpha()
+            tile_library[name] = pygame.transform.scale(img, (size, size))
+
+    return tile_library
