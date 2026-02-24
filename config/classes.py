@@ -1,9 +1,7 @@
 import pygame
 
 
-# ----------------------------------------------------------------------
-# PLAYER KLASSE
-# ----------------------------------------------------------------------
+
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y, anim_dict):
         super().__init__()
@@ -68,9 +66,7 @@ class Player(pygame.sprite.Sprite):
         self.animate(dt)
 
 
-# ----------------------------------------------------------------------
-# ENEMY KLASSE
-# ----------------------------------------------------------------------
+
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, x, y, anim_dict, speed=100, distance=200):
         super().__init__()
@@ -112,9 +108,7 @@ class Enemy(pygame.sprite.Sprite):
         surface.blit(self.image, self.rect)
 
 
-# ----------------------------------------------------------------------
-# BULLET KLASSE
-# ----------------------------------------------------------------------
+#
 class Bullet:
     def __init__(self, x, y, direction):
         self.rect = pygame.Rect(x, y, 12, 4)
@@ -131,9 +125,7 @@ class Bullet:
         pygame.draw.rect(surface, self.color, self.rect)
 
 
-# ----------------------------------------------------------------------
-# TILE KLASSE
-# ----------------------------------------------------------------------
+
 class Tile:
     def __init__(self, x, y, size, image, is_wall=False, is_deadly=False):
         # Das Tile ist statisch, braucht also nur ein Bild
