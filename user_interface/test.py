@@ -12,13 +12,6 @@ from config.vania_tile_aliases import VANIA_TILE_ALIASES
 
 
 def _ensure_anim_key(anim_dict: dict, required_key: str, fallback_key: str = "stand") -> dict:
-    """
-    Ensures anim_dict contains required_key.
-    - If required_key exists: return as-is.
-    - Else if fallback_key exists: alias required_key -> fallback_key frames.
-    - Else if any key exists: alias required_key -> first available frames.
-    - Else: return empty dict.
-    """
     if not anim_dict:
         return {}
     if required_key in anim_dict:
@@ -34,14 +27,12 @@ def _ensure_anim_key(anim_dict: dict, required_key: str, fallback_key: str = "st
 
 
 def main():
-    """Initializes game, loads assets, and handles the main game loop."""
     pygame.init()
     display, display_width, display_height = set_display(1080, 960, "Robot Warfare")
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.normpath(os.path.join(base_dir, ".."))
 
-    vania_tileset = os.path.join(project_root, "assets", "Vania", "environment", "tileset.png")
     assets_robots = os.path.normpath(os.path.join(project_root, "assets", "Robot Warfare Asset Pack 22-11-24"))
     assets_vania = os.path.normpath(os.path.join(project_root, "assets", "Vania"))
 
@@ -139,7 +130,7 @@ def main():
         if keys[pygame.K_DOWN]:
             dy = 250
 
-        if kick_pressed and move_cooldown <= 0 :
+        if kick_pressed and move_cooldown <= 0:
             move_cooldown = 0.3
             player.change_state("kick")
         elif punch_pressed and move_cooldown <= 0:
@@ -169,23 +160,9 @@ def main():
             if player.rect.colliderect(e.rect):
                 player.rect.topleft = start_pos
 
-        for b in bullets[:]:
-            b.update(dt)
-            if any(t.rect.colliderect(b.rect) for t in level_tiles if t.is_wall):
-                bullets.remove(b)
-                continue
-            for e in enemies[:]:
-                if b.rect.colliderect(e.rect):
-                    enemies.remove(e)
-                    if b in bullets:
-                        bullets.remove(b)
-                    break
-
         display.fill((30, 30, 35))
         for t in level_tiles:
             t.draw(display)
-        for b in bullets:
-            b.draw(display)
         for e in enemies:
             e.draw(display)
         display.blit(player.image, player.rect)
