@@ -2,10 +2,6 @@ import pygame
 import os
 
 
-# ----------------------------------------------------------------------
-#  PRÄZISIONS-HILFSFUNKTION
-# ----------------------------------------------------------------------
-
 def get_sprite(sheet, x, y, width, height):
     sprite = pygame.Surface([width, height], pygame.SRCALPHA)
     sprite.blit(sheet, (0, 0), pygame.Rect(x, y, width, height))
@@ -13,11 +9,6 @@ def get_sprite(sheet, x, y, width, height):
 
 
 def is_tile_mostly_transparent(tile_surf: pygame.Surface, *, alpha_threshold: int = 10, max_solid_ratio: float = 0.01) -> bool:
-    """
-    Returns True if the tile is basically empty.
-    - alpha_threshold: pixels with alpha > this are considered 'solid'
-    - max_solid_ratio: if solid_pixels/total_pixels <= this => empty
-    """
     w, h = tile_surf.get_size()
     total = w * h
     if total <= 0:
@@ -28,10 +19,6 @@ def is_tile_mostly_transparent(tile_surf: pygame.Surface, *, alpha_threshold: in
 
 
 def iter_tile_rects(sheet_w: int, sheet_h: int, tile_size: int, margin: int, spacing: int):
-    """
-    Yield (index, x, y, w, h) for each tile rect using margin/spacing rules.
-    Stops when a tile would go out of bounds.
-    """
     if tile_size <= 0:
         return
 
@@ -57,9 +44,14 @@ def show_tile_indices(
     hide_empty: bool = True,
     alpha_threshold: int = 10,
     max_solid_ratio: float = 0.01,
+    name_prefix: str = "vania",
 ):
     """
     Tile viewer with margin + spacing support (for internet tilesets).
+
+    NEW:
+      - Left click: prints base key (e.g. 'vania_064')
+      - Shift + Left click: prints alias template (e.g. '"tile_064": "vania_064",')
 
     Controls:
       - Mouse wheel: scroll
@@ -74,8 +66,8 @@ def show_tile_indices(
     """
     pygame.init()
 
-    display_w = 1600
-    display_h = 1400
+    display_w = 900
+    display_h = 480
     screen = pygame.display.set_mode((display_w, display_h))
     pygame.display.set_caption("Tile Index Viewer (margin/spacing)")
 
@@ -91,11 +83,12 @@ def show_tile_indices(
     running = True
     clock = pygame.time.Clock()
 
-    # Cache generated tiles for the current parameters
     cache_key = None
     tiles_scaled: list[pygame.Surface] = []
-    tile_indices: list[int] = []      # the tile "i" index in reading order
+    tile_indices: list[int] = []
     is_empty: list[bool] = []
+
+    last_click_msg = ""
 
     def rebuild_cache():
         nonlocal cache_key, tiles_scaled, tile_indices, is_empty
@@ -125,6 +118,43 @@ def show_tile_indices(
             return list(range(len(tile_indices)))
         return [k for k in range(len(tile_indices)) if not is_empty[k]]
 
+    def tile_at_screen_pos(mx: int, my: int, visible: list[int]) -> int | None:
+        """
+        Returns the index into tiles_scaled/tile_indices (k) for the clicked tile,
+        or None if click is outside any tile cell.
+        """
+        tile_draw_w = tile_size * zoom
+        tile_draw_h = tile_size * zoom
+
+        # reverse mapping from screen -> visible grid cell
+        x0 = 20
+        y0 = 50 + scroll_y
+
+        rel_x = mx - x0
+        rel_y = my - y0
+        if rel_x < 0 or rel_y < 0:
+            return None
+
+        cell_w = tile_draw_w + 20
+        cell_h = tile_draw_h + 30
+
+        col = rel_x // cell_w
+        row = rel_y // cell_h
+        if col < 0 or col >= viewer_cols or row < 0:
+            return None
+
+        # ensure click is inside the tile rectangle (not in padding)
+        in_cell_x = rel_x % cell_w
+        in_cell_y = rel_y % cell_h
+        if in_cell_x > tile_draw_w or in_cell_y > tile_draw_h:
+            return None
+
+        visible_idx = int(row * viewer_cols + col)
+        if visible_idx < 0 or visible_idx >= len(visible):
+            return None
+
+        return visible[visible_idx]
+
     while running:
         rebuild_cache()
         visible = visible_list()
@@ -140,6 +170,21 @@ def show_tile_indices(
                     scroll_y += 50
                 elif event.button == 5:
                     scroll_y -= 50
+                elif event.button == 1:
+                    k = tile_at_screen_pos(*event.pos, visible)
+                    if k is not None:
+                        idx = tile_indices[k]
+                        base_key = f"{name_prefix}_{idx:03d}"
+
+                        mods = pygame.key.get_mods()
+                        if mods & pygame.KMOD_SHIFT:
+                            alias_name = f"tile_{idx:03d}"
+                            line = f"\"{alias_name}\": \"{base_key}\","
+                            print(line)
+                            last_click_msg = line
+                        else:
+                            print(base_key)
+                            last_click_msg = base_key
 
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
@@ -188,17 +233,20 @@ def show_tile_indices(
             pygame.draw.rect(screen, (60, 60, 65), (draw_x, draw_y, tile_draw_w, tile_draw_h), 1)
             screen.blit(tiles_scaled[k], (draw_x, draw_y))
 
-            # Important: this is the index in reading order -> corresponds to vania_{index:03d}
             txt = font.render(str(tile_indices[k]), True, (255, 255, 0))
             screen.blit(txt, (draw_x, draw_y - 20))
 
         hud = font.render(
             f"H hide_empty={hide_empty} | tile={tile_size} | margin={margin} | spacing={spacing} | "
-            f"tiles={len(visible)}/{len(tile_indices)} |  [ ] tile  , . spacing  - = margin",
+            f"tiles={len(visible)}/{len(tile_indices)} | click=key | Shift+click=alias line",
             True,
             (220, 220, 220),
         )
         screen.blit(hud, (20, 10))
+
+        if last_click_msg:
+            hud2 = font.render(f"Last: {last_click_msg}", True, (200, 200, 255))
+            screen.blit(hud2, (20, 28))
 
         pygame.display.flip()
         clock.tick(60)
@@ -212,7 +260,14 @@ if __name__ == "__main__":
     final_path = os.path.normpath(os.path.join(base_dir, "assets", "Vania", "environment", "tileset.png"))
 
     if os.path.exists(final_path):
-        # Vania is a clean grid: tile_size=16, margin=0, spacing=0
-        show_tile_indices(final_path, tile_size=16, margin=0, spacing=0, zoom=3, hide_empty=True)
+        show_tile_indices(
+            final_path,
+            tile_size=16,
+            margin=0,
+            spacing=0,
+            zoom=3,
+            hide_empty=True,
+            name_prefix="vania",
+        )
     else:
         print("\n[FEHLER] Datei existiert nicht unter diesem Pfad.")
