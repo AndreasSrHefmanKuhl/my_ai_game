@@ -12,7 +12,7 @@ def get_sprite(sheet, x, y, width, height):
     return sprite
 
 
-def show_tile_indices(tileset_path, source_size=32):
+def show_tile_indices(tileset_path, source_size=24):
     pygame.init()
 
     # 1. ERST das Fenster erstellen
@@ -57,7 +57,7 @@ def show_tile_indices(tileset_path, source_size=32):
             grid_x = (i % tiles_per_row_in_sheet) * source_size
             grid_y = (i // tiles_per_row_in_sheet) * source_size
 
-            draw_x = (i % viewer_cols) * (source_size * zoom + 20) + 40
+            draw_x = (i % viewer_cols) * (source_size * zoom + 20) +20
             draw_y = (i // viewer_cols) * (source_size * zoom + 30) + 50 + scroll_y
 
             if -100 < draw_y < display_h:
@@ -93,8 +93,8 @@ if __name__ == "__main__":
     print(f"3. Ordner im Hauptverzeichnis: {os.listdir(base_dir)}")
 
     #
-    # Prüfe  Schreibweise! (Ist es 'Assets' oder 'assets'?)
-    target_rel_path = os.path.join("assets","Vania","SPRITES", "player","spritesheet", "player.png")
+    # Prüfe  Schreibweise! ( 'Assets' oder 'assets'?)
+    target_rel_path = os.path.join("assets","Vania", "environment","tileset.png")
     final_path = os.path.join(base_dir, target_rel_path)
     final_path = os.path.normpath(final_path)
 

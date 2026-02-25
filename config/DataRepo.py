@@ -1,4 +1,5 @@
 import os
+import json
 import pygame
 
 from config.classes import Tile
@@ -74,8 +75,7 @@ def load_all_animations(base_path, scale_factor=2):
     return animation_data
 
 def load_tile_library(path, size=10):
-    """ function to load all tiles in a folder and name their keys as the file name"""
-
+    """function to load all tiles in a folder and name their keys as the file name"""
     tile_library = {}
 
     if not os.path.exists(path):
@@ -83,23 +83,108 @@ def load_tile_library(path, size=10):
 
     for file in os.listdir(path):
         if file.endswith(".png"):
-            name = os.path.splitext(file)[0] # e.g floor_wooden...e
+            name = os.path.splitext(file)[0]
             img = pygame.image.load(os.path.join(path, file)).convert_alpha()
             tile_library[name] = pygame.transform.scale(img, (size, size))
 
     return tile_library
 
-def build_level(level_data,tile_library,tile_size=10):
 
+def load_vania_collides_local_ids(map_json_path: str) -> set[int]:
+    """
+    Reads assets/Vania/map/map.json and returns the set of local tile indices (0-based)
+    which have {"collides": true} in Tiled.
+    """
+    if not os.path.exists(map_json_path):
+        return set()
+
+    with open(map_json_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    tilesets = data.get("tilesets", [])
+    if not tilesets:
+        return set()
+
+    tileprops = (tilesets[0].get("tileproperties") or {})
+    collides_local_ids: set[int] = set()
+
+    for local_id_str, props in tileprops.items():
+        if (props or {}).get("collides") is True:
+            try:
+                collides_local_ids.add(int(local_id_str))
+            except ValueError:
+                continue
+
+    return collides_local_ids
+
+
+def load_tileset_named_library(
+    tileset_path: str,
+    *,
+    tile_size: int = 16,
+    target_size: int = 48,
+    name_prefix: str = "vania",
+    collides_local_ids: set[int] | None = None,
+) -> dict[str, dict]:
+    """
+    Cuts a tileset.png into a dict that your level builder can use (string keys).
+
+    Returns:
+      {
+        "vania_000": {"image": Surface, "tile_type": "ground"|"solid"},
+        "vania_001": {"image": Surface, "tile_type": "ground"|"solid"},
+        ...
+      }
+
+    'collides_local_ids' are the 0-based tile indices in the tileset (like in Tiled's tileproperties keys).
+    """
+    collides_local_ids = collides_local_ids or set()
+
+    sheet = pygame.image.load(tileset_path).convert_alpha()
+    tile_library: dict[str, dict] = {}
+
+    i = 0
+    for y in range(0, sheet.get_height(), tile_size):
+        for x in range(0, sheet.get_width(), tile_size):
+            tile_name = f"{name_prefix}_{i:03d}"
+            img = get_sprite(sheet, x, y, tile_size, tile_size)
+            img = pygame.transform.scale(img, (target_size, target_size))
+
+            tile_type = "solid" if i in collides_local_ids else "ground"
+            tile_library[tile_name] = {"image": img, "tile_type": tile_type}
+            i += 1
+
+    return tile_library
+
+
+def build_level(level_data, tile_library, tile_size=10):
+    """
+    level_data: 2D list of strings (tile names), e.g. "vania_010" or "empty"
+    tile_library: either {name: Surface} OR {name: {"image": Surface, "tile_type": str}}
+    """
     level_tiles = []
 
     for row_idx, row in enumerate(level_data):
         for col_idx, tile_name in enumerate(row):
-            if tile_name in tile_library:
-                x = col_idx * tile_size
-                y = row_idx * tile_size
-                # Create Tile object with image from library
-                new_tile = Tile(x, y, tile_library[tile_name], tile_type=tile_name)
-                level_tiles.append(new_tile)
+            if not tile_name or tile_name == "empty":
+                continue
+
+            entry = tile_library.get(tile_name)
+            if entry is None:
+                continue
+
+            if isinstance(entry, dict):
+                image = entry["image"]
+                tile_type = entry.get("tile_type", tile_name)
+            else:
+                image = entry
+                tile_type = tile_name
+
+            x = col_idx * tile_size
+            y = row_idx * tile_size
+
+            new_tile = Tile(x, y, tile_size, image, tile_type=tile_type)
+            level_tiles.append(new_tile)
 
     return level_tiles
+

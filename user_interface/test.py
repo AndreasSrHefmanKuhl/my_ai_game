@@ -90,7 +90,7 @@ def main():
                     continue
                 is_wall = (10 <= t_idx <= 11 or 138 <= t_idx <= 150)
                 is_deadly = (12 <= t_idx <= 14)
-                level_tiles.append(Tile(c_idx * 48, r_idx * 48, 48, all_tile_images[t_idx], is_wall, is_deadly))
+                level_tiles.append(Tile(c_idx * 48, r_idx * 48, 48, all_tile_images[t_idx], tile_type="ground"))
 
     player = Player(start_pos[0], start_pos[1], player_data)
 
