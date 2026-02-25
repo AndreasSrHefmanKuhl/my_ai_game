@@ -1,7 +1,14 @@
 import os
 import pygame
 from config.classes import Player, Tile, Enemy, Bullet
-from config.DataRepo import set_display, load_all_animations, load_tileset
+from config.DataRepo import set_display, load_all_animations
+from config.DataRepo import (
+    load_vania_collides_local_ids,
+    load_tileset_named_library,
+    apply_tile_aliases,
+    build_level,
+)
+from config.vania_tile_aliases import VANIA_TILE_ALIASES
 
 
 def _ensure_anim_key(anim_dict: dict, required_key: str, fallback_key: str = "stand") -> dict:
@@ -32,14 +39,16 @@ def main():
     display, display_width, display_height = set_display(1080, 960, "Robot Warfare")
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    assets_robots = os.path.normpath(os.path.join(base_dir, "..", "assets", "Robot Warfare Asset Pack 22-11-24"))
-    assets_vania = os.path.normpath(os.path.join(base_dir, "..", "assets", "Vania"))
+    project_root = os.path.normpath(os.path.join(base_dir, ".."))
 
+    vania_tileset = os.path.join(project_root, "assets", "Vania", "environment", "tileset.png")
+    assets_robots = os.path.normpath(os.path.join(project_root, "assets", "Robot Warfare Asset Pack 22-11-24"))
+    assets_vania = os.path.normpath(os.path.join(project_root, "assets", "Vania"))
+
+    # --- Load animations (unchanged) ---
     scarab_path = os.path.join(assets_robots, "Robots", "Scarab")
     hornet_path = os.path.join(assets_robots, "Robots", "Hornet")
     wasp_path = os.path.join(assets_robots, "Robots", "Wasp")
-    tileset_path = os.path.join(assets_robots, "Tileset", "tileset_compressed.png")
-
 
     player_path = os.path.join(assets_vania, "SPRITES", "player", "idle")
     wizard_path = os.path.join(assets_vania, "SPRITES", "wizard", "idle-sprites")
@@ -54,8 +63,8 @@ def main():
 
     player_data = _ensure_anim_key(player_data, required_key="stand")
     player_data = _ensure_anim_key(player_data, required_key="walk", fallback_key="stand")
-    player_data = _ensure_anim_key(player_data, required_key= "punch", fallback_key="stand")
-    player_data = _ensure_anim_key(player_data, required_key= "kick", fallback_key="stand")
+    player_data = _ensure_anim_key(player_data, required_key="punch", fallback_key="stand")
+    player_data = _ensure_anim_key(player_data, required_key="kick", fallback_key="stand")
 
     wizard_data = _ensure_anim_key(wizard_data, required_key="walk", fallback_key="stand")
     angel_data = _ensure_anim_key(angel_data, required_key="walk", fallback_key="stand")
@@ -65,41 +74,38 @@ def main():
     if not wizard_data or "walk" not in wizard_data:
         raise FileNotFoundError(f"Wizard animations not found/loaded from: {wizard_path}")
 
-    all_tile_images = load_tileset(tileset_path, 16, 48)
+    # --- Load VANIA tileset for level building (strings) ---
+    vania_tileset_path = os.path.join(assets_vania, "environment", "tileset.png")
+    vania_map_json_path = os.path.join(assets_vania, "map", "map.json")
 
+    collides_ids = load_vania_collides_local_ids(vania_map_json_path)
+    base_library = load_tileset_named_library(
+        vania_tileset_path,
+        tile_size=16,
+        target_size=48,
+        name_prefix="vania",
+        collides_local_ids=collides_ids,
+    )
+    tile_library = apply_tile_aliases(base_library, VANIA_TILE_ALIASES, strict=True)
+
+    # --- STRING level map (uses curated names from VANIA_TILE_ALIASES) ---
     level_map = [
-        [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
-        [10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 10],
-        [10, 1, 1, 1, 1, 1, 154, 1, 1, 1, 1, 1, 1, 1, 1, 1, 153, 1, 1, 10],
-        [10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 10],
-        [10, 1, 153, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 138, 139, 1, 1, 1, 10],
-        [10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 140, 141, 1, 1, 1, 10],
-        [10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 154, 1, 1, 1, 1, 1, 1, 1, 10],
-        [10, 1, 1, 1, 142, 143, 144, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 10],
-        [10, 1, 1, 1, 145, 146, 147, 1, 1, 1, 1, 1, 1, 153, 1, 1, 1, 1, 1, 10],
-        [10, 1, 1, 1, 148, 149, 150, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 10],
-        [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+        ["wall","wall","wall","wall","wall","wall","wall","wall","wall","wall"],
+        ["wall","empty","empty","empty","empty","empty","empty","empty","empty","wall"],
+        ["wall","empty","floor","floor","floor","floor","floor","floor","empty","wall"],
+        ["wall","empty","floor","spike","floor","floor","spike","floor","empty","wall"],
+        ["wall","empty","floor","floor","floor","floor","floor","floor","empty","wall"],
+        ["wall","empty","empty","empty","empty","empty","empty","empty","empty","wall"],
+        ["wall","wall","wall","wall","wall","wall","wall","wall","wall","wall"],
     ]
 
     start_pos = (100, 48)
-    level_tiles = []
-    for r_idx, row in enumerate(level_map):
-        for c_idx, t_idx in enumerate(row):
-            if t_idx != -1:
-                if t_idx < 0 or t_idx >= len(all_tile_images):
-                    continue
-                is_wall = (10 <= t_idx <= 11 or 138 <= t_idx <= 150)
-                is_deadly = (12 <= t_idx <= 14)
-                level_tiles.append(Tile(c_idx * 48, r_idx * 48, 48, all_tile_images[t_idx], tile_type="ground"))
+    level_tiles = build_level(level_map, tile_library, tile_size=48)
 
     player = Player(start_pos[0], start_pos[1], player_data)
-
-
     wizard = Enemy(200, 0, wizard_data)
-    angel = Enemy(200,0, angel_data)
-
-
-    enemies = [wizard,angel]
+    angel = Enemy(200, 0, angel_data)
+    enemies = [wizard, angel]
 
     bullets = []
     move_cooldown = 0.0
