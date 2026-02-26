@@ -28,26 +28,22 @@ def _ensure_anim_key(anim_dict: dict, required_key: str, fallback_key: str = "st
 
 def main():
     pygame.init()
-    display, display_width, display_height = set_display(1080, 960, "Robot Warfare")
+    display, display_width, display_height = set_display(1000, 800, "Schaolin Vania")
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.normpath(os.path.join(base_dir, ".."))
 
-    assets_robots = os.path.normpath(os.path.join(project_root, "assets", "Robot Warfare Asset Pack 22-11-24"))
+
     assets_vania = os.path.normpath(os.path.join(project_root, "assets", "Vania"))
 
-    # --- Load animations (unchanged) ---
-    scarab_path = os.path.join(assets_robots, "Robots", "Scarab")
-    hornet_path = os.path.join(assets_robots, "Robots", "Hornet")
-    wasp_path = os.path.join(assets_robots, "Robots", "Wasp")
+    # --- Load animations ---
+
 
     player_path = os.path.join(assets_vania, "SPRITES", "player", "idle")
     wizard_path = os.path.join(assets_vania, "SPRITES", "wizard", "idle-sprites")
     angel_path = os.path.join(assets_vania, "SPRITES", "angel", "sprites", "idle")
 
-    scarab_data = load_all_animations(scarab_path, scale_factor=4)
-    hornet_data = load_all_animations(hornet_path, scale_factor=4)
-    wasp_data = load_all_animations(wasp_path, scale_factor=4)
+
     player_data = load_all_animations(player_path, scale_factor=4)
     wizard_data = load_all_animations(wizard_path, scale_factor=4)
     angel_data = load_all_animations(angel_path, scale_factor=4)
@@ -79,18 +75,50 @@ def main():
     )
     tile_library = apply_tile_aliases(base_library, VANIA_TILE_ALIASES, strict=True)
 
-    # --- STRING level map (uses curated names from VANIA_TILE_ALIASES) ---
+    # --- STRING level map  ---
     level_map = [
-        ["wall","wall","wall","wall","wall","wall","wall","wall","wall","wall"],
-        ["wall","empty","empty","empty","empty","empty","empty","empty","empty","wall"],
-        ["wall","empty","floor","floor","floor","floor","floor","floor","empty","wall"],
-        ["wall","empty","floor","spike","floor","floor","spike","floor","empty","wall"],
-        ["wall","empty","floor","floor","floor","floor","floor","floor","empty","wall"],
-        ["wall","empty","empty","empty","empty","empty","empty","empty","empty","wall"],
-        ["wall","wall","wall","wall","wall","wall","wall","wall","wall","wall"],
+        ["bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl"],
+        ["bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
+         "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
+         "bg_br_bl", "bg_br_bl", "bg_br_bl"],
+        ["bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
+         "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
+         "bg_br_bl", "bg_br_bl", "bg_br_bl"],
+        ["bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
+         "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
+         "bg_br_bl", "bg_br_bl", "bg_br_bl"],
+        ["bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
+         "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
+         "bg_br_bl", "bg_br_bl", "bg_br_bl"],
+        ["bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
+         "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
+         "bg_br_bl", "bg_br_bl", "bg_br_bl"],
+        ["bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
+         "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
+         "bg_br_bl", "bg_br_bl", "bg_br_bl"],
+        ["bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
+         "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
+         "bg_br_bl", "bg_br_bl", "bg_br_bl"],
+        ["bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
+         "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
+         "bg_br_bl", "bg_br_bl", "bg_br_bl"],
+        ["bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
+         "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
+         "bg_br_bl", "bg_br_bl", "bg_br_bl"],
+        ["bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
+         "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
+         "bg_br_bl", "bg_br_bl", "bg_br_bl"],
+        ["bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
+         "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
+         "bg_br_bl", "bg_br_bl", "bg_br_bl"],
+        ["bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
+         "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
+         "bg_br_bl", "bg_br_bl", "bg_br_bl"],
+
+
     ]
 
-    start_pos = (100, 48)
+    start_pos = (10, 48)
     level_tiles = build_level(level_map, tile_library, tile_size=48)
 
     player = Player(start_pos[0], start_pos[1], player_data)
