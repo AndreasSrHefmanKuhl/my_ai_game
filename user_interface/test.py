@@ -63,60 +63,21 @@ def main():
 
     # --- Load VANIA tileset for level building (strings) ---
     vania_tileset_path = os.path.join(assets_vania, "environment", "tileset.png")
-    vania_map_json_path = os.path.join(assets_vania, "map", "map.json")
+    #vania_map_json_path = os.path.join(assets_vania, "map", "map.json")
 
-    collides_ids = load_vania_collides_local_ids(vania_map_json_path)
+    #collides_ids = load_vania_collides_local_ids(vania_map_json_path)
     base_library = load_tileset_named_library(
         vania_tileset_path,
         tile_size=16,
         target_size=48,
         name_prefix="vania",
-        collides_local_ids=collides_ids,
+        #collides_local_ids=collides_ids,
     )
     tile_library = apply_tile_aliases(base_library, VANIA_TILE_ALIASES, strict=True)
 
     # --- STRING level map  ---
-    level_map = [
-        ["bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl","bg_br_bl"],
-        ["bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
-         "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
-         "bg_br_bl", "bg_br_bl", "bg_br_bl"],
-        ["bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
-         "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
-         "bg_br_bl", "bg_br_bl", "bg_br_bl"],
-        ["bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
-         "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
-         "bg_br_bl", "bg_br_bl", "bg_br_bl"],
-        ["bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
-         "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
-         "bg_br_bl", "bg_br_bl", "bg_br_bl"],
-        ["bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
-         "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
-         "bg_br_bl", "bg_br_bl", "bg_br_bl"],
-        ["bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
-         "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
-         "bg_br_bl", "bg_br_bl", "bg_br_bl"],
-        ["bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
-         "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
-         "bg_br_bl", "bg_br_bl", "bg_br_bl"],
-        ["bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
-         "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
-         "bg_br_bl", "bg_br_bl", "bg_br_bl"],
-        ["bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
-         "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
-         "bg_br_bl", "bg_br_bl", "bg_br_bl"],
-        ["bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
-         "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
-         "bg_br_bl", "bg_br_bl", "bg_br_bl"],
-        ["bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
-         "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
-         "bg_br_bl", "bg_br_bl", "bg_br_bl"],
-        ["bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
-         "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl", "bg_br_bl",
-         "bg_br_bl", "bg_br_bl", "bg_br_bl"],
-
-
-    ]
+    level_map = [["brick","brick2"]
+        ]
 
     start_pos = (10, 48)
     level_tiles = build_level(level_map, tile_library, tile_size=48)
@@ -167,26 +128,37 @@ def main():
         else:
             player.change_state(state)
 
-        old_x = player.rect.x
-        player.rect.x += dx * dt
-        for t in [tile for tile in level_tiles if tile.is_wall]:
-            if player.rect.colliderect(t.rect):
-                player.rect.x = old_x
+            # Erst die Bewegung abschließen (Horizontal & Vertikal)
+            old_x = player.rect.x
+            player.rect.x += dx * dt
+            for t in [tile for tile in level_tiles if tile.is_wall]:
+                if player.rect.colliderect(t.rect):
+                    player.rect.x = old_x
 
-        old_y = player.rect.y
-        player.rect.y += dy * dt
-        for t in level_tiles:
-            if t.is_wall and player.rect.colliderect(t.rect):
-                player.rect.y = old_y
-            if t.is_deadly and player.rect.colliderect(t.rect):
-                player.rect.topleft = start_pos
+            old_y = player.rect.y
+            player.rect.y += dy * dt
+            for t in level_tiles:
+                if t.is_wall and player.rect.colliderect(t.rect):
+                    player.rect.y = old_y
 
-        player.update(dt, dx)
+                #  Nur resetten, wenn es wirklich tödlich ist (dead)
+                if t.is_deadly and player.rect.colliderect(t.rect):
+                    player.rect.topleft = start_pos
 
-        for e in enemies:
-            e.update(dt)
-            if player.rect.colliderect(e.rect):
-                player.rect.topleft = start_pos
+            #  Player Status aktualisieren
+            # Das muss passieren, BEVOR wir die Gegner prüfen, damit der 'state' stimmt
+            player.update(dt, dx)
+
+
+            for e in enemies[:]:
+                e.update(dt)
+                if player.rect.colliderect(e.rect):
+                    #   KICKEN oder PUNCHEN, stirbt der Gegner (kein Reset!)
+                    if player.state in ["punch", "kick"]:
+                        enemies.remove(e)
+                        print("Gegner besiegt! Du kannst weiter erkunden.")
+                    else:
+                        player.change_state(state)
 
         display.fill((30, 30, 35))
         for t in level_tiles:

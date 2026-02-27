@@ -5,8 +5,8 @@ VANIA_TILE_ALIASES: dict[str, str] = {
     #backgrounds
     "e_bl": "vania_029",
     "e_vio": "vania_106",
-    "bg_br_bl": "vania_031",
-    "bg_br_bl1": "vania_052",
+    "brick": "vania_031",
+    "brick1": "vania_052",
     "bg_br_vio": "vania_043",
     "bg_br_vio1": "vania_048",
     "bg_mbr_vio": "vania_045",
@@ -27,21 +27,19 @@ VANIA_TILE_ALIASES: dict[str, str] = {
 
 
 
-    "floor_stm": "vania_241",
-    "floor_stleap_01": "vania_223",
-    "floor_stleap_02": "vania_225",
+    "way": "vania_241",
+    "way1": "vania_223",
+    "way2": "vania_225",
     "floor_head": "vania_210",
     "floor_ground":"vania_257",
     "floor_ground1":"vania_256",
 
 
     # walls / solid
-    "wall_tsc": "vania_064",
-    "wall_tsc_sw": "vania_069",
-    "wall_tsc1": "vania_066",
-    "wall_tsc1_sw": "vania_069",
-    "wall_msc":"vania_096",
-    "wall_msc_sw":"vania_097",
+    "wall1": "vania_064",
+    "wall2": "vania_069",
+    "wall3":"vania_096",
+    "wall4":"vania_097",
 
     # hazards (optional naming; your Tile class marks deadly if name contains "lava" or "spike")
     "dead_01": "vania_260",

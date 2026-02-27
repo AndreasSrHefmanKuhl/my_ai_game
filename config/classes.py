@@ -19,10 +19,11 @@ class Player(pygame.sprite.Sprite):
             "walk": 0.15,
             "punch": 0.15,  # existing
             "kick": 0.12,    # slower kick (tweak 0.05..0.10)
+
         }
 
         # States that should finish before stand/walk can override them
-        self.locked_states = {"punch", "kick"}
+        self.locked_states = {"punch", "kick",}
 
         self.flip = False
 
@@ -136,7 +137,7 @@ class Tile:
         self.tile_type = tile_type
 
         self.is_wall = "wall" in tile_type or "solid" in tile_type
-        self.is_deadly = "lava" in tile_type or "spike" in tile_type or "dead" in tile_type
+        self.is_deadly = "dead" in tile_type
 
     def draw(self, surface):
         """Zeichnet den Boden/Wand."""
