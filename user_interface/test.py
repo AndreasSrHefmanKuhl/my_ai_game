@@ -52,6 +52,10 @@ def main():
     player_data = _ensure_anim_key(player_data, required_key="walk", fallback_key="stand")
     player_data = _ensure_anim_key(player_data, required_key="punch", fallback_key="stand")
     player_data = _ensure_anim_key(player_data, required_key="kick", fallback_key="stand")
+    player_data = _ensure_anim_key(player_data, required_key="crouch", fallback_key="stand")
+    player_data = _ensure_anim_key(player_data, required_key="crouch_kick", fallback_key="stand")
+
+
 
     wizard_data = _ensure_anim_key(wizard_data, required_key="walk", fallback_key="stand")
     angel_data = _ensure_anim_key(angel_data, required_key="walk", fallback_key="stand")
@@ -98,6 +102,7 @@ def main():
 
         kick_pressed = False
         punch_pressed = False
+        crk_pressed = False
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -106,6 +111,8 @@ def main():
                 kick_pressed = True
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_s:
                 punch_pressed = True
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_a:
+                crk_pressed = True
 
         keys = pygame.key.get_pressed()
         dx, dy, state = 0, 0, "stand"
@@ -115,9 +122,9 @@ def main():
         elif keys[pygame.K_RIGHT]:
             dx, state = 250, "walk"
         if keys[pygame.K_UP]:
-            dy = -250
+            dy, state = -250,"walk"
         if keys[pygame.K_DOWN]:
-            dy = 250
+            dy,state = 250,"crouch"
 
         if kick_pressed and move_cooldown <= 0:
             move_cooldown = 0.3
@@ -125,6 +132,9 @@ def main():
         elif punch_pressed and move_cooldown <= 0:
             move_cooldown = 0.2
             player.change_state("punch")
+        elif crk_pressed and move_cooldown <= 0:
+            move_cooldown = 0.2
+            player.change_state("crouchkick")
         else:
             player.change_state(state)
 
@@ -141,7 +151,7 @@ def main():
                 if t.is_wall and player.rect.colliderect(t.rect):
                     player.rect.y = old_y
 
-                #  Nur resetten, wenn es wirklich tödlich ist (dead)
+
                 if t.is_deadly and player.rect.colliderect(t.rect):
                     player.rect.topleft = start_pos
 
@@ -154,7 +164,7 @@ def main():
                 e.update(dt)
                 if player.rect.colliderect(e.rect):
                     #   KICKEN oder PUNCHEN, stirbt der Gegner (kein Reset!)
-                    if player.state in ["punch", "kick"]:
+                    if player.state in ["punch", "kick","crouchkick"]:
                         enemies.remove(e)
                         print("Gegner besiegt! Du kannst weiter erkunden.")
                     else:
