@@ -25,7 +25,7 @@ class Player(pygame.sprite.Sprite):
         }
 
         # States that should finish before stand/walk can override them
-        self.locked_states = {"punch", "kick","crouchkick"}
+        self.locked_states = {"punch", "kick","crouchkick","crouch"}
 
         self.flip = False
 

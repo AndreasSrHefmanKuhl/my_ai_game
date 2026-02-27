@@ -100,6 +100,7 @@ def main():
         dt = clock.tick(60) / 1000.0
         move_cooldown = max(0.0, move_cooldown - dt)
 
+        cr_pressed = False
         kick_pressed = False
         punch_pressed = False
         crk_pressed = False
@@ -113,6 +114,8 @@ def main():
                 punch_pressed = True
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_a:
                 crk_pressed = True
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_d:
+                cr_pressed = True
 
         keys = pygame.key.get_pressed()
         dx, dy, state = 0, 0, "stand"
@@ -124,7 +127,7 @@ def main():
         if keys[pygame.K_UP]:
             dy, state = -250,"walk"
         if keys[pygame.K_DOWN]:
-            dy,state = 250,"crouch"
+            dy,state = 250,"walk"
 
         if kick_pressed and move_cooldown <= 0:
             move_cooldown = 0.3
@@ -135,6 +138,9 @@ def main():
         elif crk_pressed and move_cooldown <= 0:
             move_cooldown = 0.2
             player.change_state("crouchkick")
+        elif cr_pressed and move_cooldown <= 0:
+            move_cooldown = 0.2
+            player.change_state("crouch")
         else:
             player.change_state(state)
 
