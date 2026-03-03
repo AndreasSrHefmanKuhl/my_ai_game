@@ -80,8 +80,22 @@ def main():
     tile_library = apply_tile_aliases(base_library, VANIA_TILE_ALIASES, strict=True)
 
     # --- STRING level map  ---
-    level_map = [["brick","brick2"]
+    level_map = [
+        ["brick","brick2","brick","brick1","brick","brick1","brick","brick1","brick","brick1","brick","brick1","brick","brick1","brick","brick1","brick","brick1","brick","brick1","brick","brick1","brick","brick1"],
+        ["brick", "brick2", "brick", "brick1", "brick", "brick1", "brick", "brick1", "brick", "brick1", "brick",
+         "brick1", "brick", "brick1", "brick", "brick1", "brick", "brick1", "brick", "brick1", "brick", "brick1",
+         "brick", "brick1"],
+        ["brick", "brick2", "brick", "brick1", "brick", "brick1", "brick", "brick1", "brick", "brick1", "brick",
+         "brick1", "brick", "brick1", "brick", "brick1", "brick", "brick1", "brick", "brick1", "brick", "brick1",
+         "brick", "brick1"],
+        ["brick", "brick2", "brick", "brick1", "brick", "brick1", "brick", "brick1", "brick", "brick1", "brick",
+         "brick1", "brick", "brick1", "brick", "brick1", "brick", "brick1", "brick", "brick1", "brick", "brick1",
+         "brick", "brick1"],
+        ["way", "way1", "way2", "floor_head", "floor_ground", "floor_ground1", "wall1", "wall2", "wall3", "wall4",]
+
+
         ]
+
 
     start_pos = (10, 48)
     level_tiles = build_level(level_map, tile_library, tile_size=48)
@@ -162,7 +176,7 @@ def main():
                     player.rect.topleft = start_pos
 
             #  Player Status aktualisieren
-            # Das muss passieren, BEVOR wir die Gegner prüfen, damit der 'state' stimmt
+            # Das muss passieren, BEVOR  Gegner prüfen, damit der 'state' stimmt
             player.update(dt, dx)
 
 
@@ -172,7 +186,7 @@ def main():
                     #   KICKEN oder PUNCHEN, stirbt der Gegner (kein Reset!)
                     if player.state in ["punch", "kick","crouchkick"]:
                         enemies.remove(e)
-                        print("Gegner besiegt! Du kannst weiter erkunden.")
+
                     else:
                         player.change_state(state)
 
