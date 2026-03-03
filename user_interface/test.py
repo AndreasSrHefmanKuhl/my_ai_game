@@ -58,6 +58,8 @@ def main():
 
 
     wizard_data = _ensure_anim_key(wizard_data, required_key="walk", fallback_key="stand")
+    wizard_data = _ensure_anim_key(wizard_data, required_key="fire", fallback_key="stand")
+
     angel_data = _ensure_anim_key(angel_data, required_key="walk", fallback_key="stand")
 
     if not player_data or "stand" not in player_data:
