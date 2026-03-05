@@ -13,11 +13,12 @@ load_dotenv()
 
 # Ensure keys are set in your .env file
 OPENAI_API_KEY = os.getenv("OAI_KEY")
-TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
+"""TO DO (hier kommen die tool für den agent hin, damit er weiß später wie zu reagieren(funkti0nen sind erwünscht))"""
+#TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
 
 #  Setup Tools
-tavily_tool = TavilySearchResults(max_results=5)
-tools = [tavily_tool]
+#tavily_tool = TavilySearchResults(max_results=5)
+#tools = [tavily_tool]
 
 #  Define State
 class AgentState(TypedDict):

@@ -15,10 +15,10 @@ from config.vania_tile_aliases import VANIA_TILE_ALIASES
 def main():
     pygame.init()
     # Fenstergröße definieren
-    win_w, win_h = 1000, 800
+    win_w, win_h = 800, 400
     display, dw, dh = set_display(win_w, win_h, "Schaolin Vania")
 
-    # Pfad-Logik (Deine Original-Struktur)
+    # Pfad-Logik (
     base_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.normpath(os.path.join(base_dir, ".."))
     assets_vania = os.path.normpath(os.path.join(project_root, "assets", "Vania"))
@@ -35,12 +35,15 @@ def main():
 
     # Deine Map (P = Start, E = Gegner)
     level_map = [
-        ["brick"] * 21,
-        ["wall1"] + ["."] * 19 + ["wall1"],
-        ["wall1"] + ["."] * 19 + ["wall1"],
-        ["wall1"] + ["."] * 5 + ["E"] + ["."] * 13 + ["wall1"],
-        ["wall1", "P"] + ["."] * 18 + ["wall1"],
-        ["way", "way1", "way2", "floor_head", "floor_ground", "floor_ground1"] + ["way"] * 15
+        (["brick"] + ["brick1"])*21,
+        ["brick"] + ["."] * 19 + ["wall1"],
+        ["brick"] + ["."] * 19 + ["wall1"],
+        ["brick"] + ["P"]+["."] * 5 + ["E"] + ["."] * 13 + ["wall1"],
+        ["brick"] + ["."] * 19 + ["wall1"],
+        ["brick"] + ["."] * 8 +["way"]*2+["."]*10+ ["wall1"],
+        ["brick"] + ["."] * 19 + ["wall1"],
+        ["brick"] + ["way"] * 19 + ["wall1"],
+
     ]
 
     # Level-Objekte erstellen
