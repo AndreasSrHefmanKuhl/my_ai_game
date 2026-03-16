@@ -14,118 +14,142 @@ from config.vania_tile_aliases import VANIA_TILE_ALIASES
 
 def main():
     pygame.init()
-    # Fenstergröße definieren
-    win_w, win_h = 800, 400
+
+    # 1. Setup Fenster
+    win_w, win_h = 800, 600
     display, dw, dh = set_display(win_w, win_h, "Schaolin Vania")
 
-    # Pfad-Logik (
+    # Pfad-Logik
     base_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.normpath(os.path.join(base_dir, ".."))
     assets_vania = os.path.normpath(os.path.join(project_root, "assets", "Vania"))
 
-    # Assets laden - Zeigt auf Hauptordner für alle Animationen
-    player_data = load_all_animations(os.path.join(assets_vania, "SPRITES", "player","idle"), scale_factor=3)
-    wizard_data = load_all_animations(os.path.join(assets_vania, "SPRITES", "wizard","idle-sprites"), scale_factor=3)
+    # 2. Assets laden
+    player_data = load_all_animations(os.path.join(assets_vania, "SPRITES", "player", "idle"), scale_factor=2)
+    wizard_data = load_all_animations(os.path.join(assets_vania, "SPRITES", "wizard", "idle-sprites"), scale_factor=2)
+    angel_data = load_all_animations(os.path.join(assets_vania, "SPRITES", "angel", "sprites", "idle"), scale_factor=2)
+    ghoul_data = load_all_animations(os.path.join(assets_vania, "SPRITES", "burning-ghoul", "sprites"), scale_factor=2)
 
-    # Tiles laden
+    # 3. Tileset-Vorbereitung
     TS = 48
     tileset_path = os.path.join(assets_vania, "environment", "tileset.png")
     raw_tiles = load_tileset_named_library(tileset_path, source_size=16, target_size=TS)
     tile_library = apply_tile_aliases(raw_tiles, VANIA_TILE_ALIASES)
 
-    # Deine Map (P = Start, E = Gegner)
-    level_map = [
-        (["brick"] + ["brick1"])*21,
-        ["brick"] + ["."] * 19 + ["wall1"],
-        ["brick"] + ["."] * 19 + ["wall1"],
-        ["brick"] + ["P"]+["."] * 5 + ["E"] + ["."] * 13 + ["wall1"],
-        ["brick"] + ["."] * 19 + ["wall1"],
-        ["brick"] + ["."] * 8 +["way"]*2+["."]*10+ ["wall1"],
-        ["brick"] + ["."] * 19 + ["wall1"],
-        ["brick"] + ["way"] * 19 + ["wall1"],
+    # 4. Level-Map Design
 
-    ]
+    rows_needed = win_h // TS
+    map_width = 64
 
-    # Level-Objekte erstellen
-    level_tiles, enemies, player = build_level(level_map, tile_library, TS, player_data, [wizard_data])
+    level_map = []
+    for r in range(rows_needed):
+        if r == rows_needed - 1:
+            level_map.append(["floor_head"] * map_width)
+        elif r == rows_needed - 2:
+            # Player und Gegner Reihe
+            row = ["."] * map_width
+            row[2] = "P"
+            row[22] = "E"
+            row[42] = "E"
+            level_map.append(row)
+        else:
+            # Wände an den Seiten
+            level_map.append(["wall1"] + ["."] * (map_width - 2) + ["wall1"])
 
-    # Hintergrund laden & auf FENSTERGRÖSSE skalieren
+    # 5. Objekte initialisieren
+    level_tiles, enemies, player = build_level(
+        level_map, tile_library, TS, player_data, [wizard_data, angel_data, ghoul_data]
+    )
+
+    # Hintergrund laden
     bg_path = os.path.join(assets_vania, "environment", "background.png")
     bg_img = pygame.image.load(bg_path).convert_alpha()
-    bg_img = pygame.transform.scale(bg_img, (win_w, win_h))
 
-    # Das fertige Level-Bild (Background + Tiles)
+
+
     level_surface = create_level_surface(level_map, tile_library, bg_img, TS)
+    level_pixel_width = map_width * TS
 
     clock = pygame.time.Clock()
+    camera_x = 0
 
     while True:
         dt = clock.tick(60) / 1000.0
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit();
+                pygame.quit()
                 return
 
-        # --- DEINE ORIGINAL-STEUERUNG ---
+        # --- INPUT ---
         keys = pygame.key.get_pressed()
         dx, state = 0, "stand"
 
-        # Angriffe
         if keys[pygame.K_f]:
             state = "punch"
         elif keys[pygame.K_g]:
             state = "kick"
-        elif keys[pygame.K_h] and keys[pygame.K_DOWN]:
-            state = "crouchkick"
         elif keys[pygame.K_DOWN]:
             state = "crouch"
-        # Bewegung
-        elif keys[pygame.K_LEFT]:
+
+        if keys[pygame.K_LEFT]:
             dx = -250
             state = "walk"
         elif keys[pygame.K_RIGHT]:
             dx = 250
             state = "walk"
 
-        # Sprung
         if keys[pygame.K_UP] or keys[pygame.K_SPACE]:
             player.jump()
 
         # --- PHYSIK & KOLLISION ---
         # Horizontal
-        old_x = player.rect.x
         player.rect.x += dx * dt
         for t in [tile for tile in level_tiles if tile.is_wall]:
             if player.rect.colliderect(t.rect):
-                player.rect.x = old_x
+                if dx > 0:
+                    player.rect.right = t.rect.left
+                elif dx < -0:
+                    player.rect.left = t.rect.right
 
-        # Vertikal (Schwerkraft)
-        player.on_ground = False
+        # Vertikal
         player.apply_gravity()
+        player.on_ground = False
         for t in [tile for tile in level_tiles if tile.is_floor or tile.is_wall]:
             if player.rect.colliderect(t.rect):
-                if player.velocity_y > 0:  # Landen
+                if player.velocity_y > 0:
                     player.rect.bottom = t.rect.top
-                    player.velocity_y, player.on_ground = 0, True
-                elif player.velocity_y < 0 and t.is_wall:  # Kopf anstoßen
+                    player.velocity_y = 0
+                    player.on_ground = True
+                elif player.velocity_y < 0 and t.is_wall:
                     player.rect.top = t.rect.bottom
                     player.velocity_y = 0
 
-        # Animation & Gegner Update
+        # --- UPDATES ---
         player.change_state(state)
         player.update(dt, dx)
         for e in enemies:
             e.update(dt)
 
-        # --- ZEICHNEN ---
-        # 1. Level-Hintergrund (mit allen Tiles)
-        display.blit(level_surface, (0, 0))
+        # --- KAMERA BERECHNUNG ---
+        # Die Kamera versucht den Spieler in der Mitte zu halten
+        target_camera_x = player.rect.centerx - win_w // 2
+        # Sanftes Folgen (Lerp)
+        camera_x += (target_camera_x - camera_x) * 0.1
+        # Kamera-Grenzen (nicht aus der Map herausscrollen)
+        camera_x = max(0, min(camera_x, level_pixel_width - win_w))
 
-        # 2. Gegner & Player
+        # --- ZEICHNEN ---
+        display.fill((30, 30, 30))  # Fallback Hintergrundfarbe
+
+        # 1. Level-Surface (beinhaltet BG und Tiles) mit Kamera-Offset
+        display.blit(level_surface, (-camera_x, 0))
+
+        # 2. Gegner zeichnen
         for e in enemies:
-            e.draw(display)
-        if player:
-            display.blit(player.image, player.rect)
+            display.blit(e.image, (e.rect.x - camera_x, e.rect.y))
+
+        # 3. Player zeichnen
+        display.blit(player.image, (player.rect.x - camera_x, player.rect.y))
 
         pygame.display.update()
 

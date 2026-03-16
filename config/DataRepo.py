@@ -58,11 +58,20 @@ def build_level(level_data, tile_library, tile_size=48, player_data=None, enemy_
                 level_tiles.append(Tile(x, y, tile_size, tile_library[cell], cell))
     return level_tiles, enemies, player
 
+
 def create_level_surface(level_data, tile_library, background_img, tile_size=48):
-    # Erstellt ein fertiges Bild aus Background + Tiles
-    w, h = len(level_data[0]) * tile_size, len(level_data) * tile_size
+    # Korrekte Berechnung der Dimensionen
+    cols = len(level_data[0]) if level_data else 0
+    rows = len(level_data)
+    w, h = cols * tile_size, rows * tile_size
+
     surf = pygame.Surface((w, h)).convert_alpha()
-    surf.blit(pygame.transform.scale(background_img, (w, h)), (0, 0))
+
+
+    if background_img:
+        scaled_bg = pygame.transform.scale(background_img, (w, h))
+        surf.blit(scaled_bg, (0, 0))
+
     for r_idx, row in enumerate(level_data):
         for c_idx, cell in enumerate(row):
             if cell in tile_library:
