@@ -67,7 +67,7 @@ def create_level_surface(level_data, tile_library, background_img, tile_size=48)
 
     surf = pygame.Surface((w, h)).convert_alpha()
 
-
+    # Hintergrund auf die volle LEVEL-Größe skalieren, nicht nur Screen-Größe
     if background_img:
         scaled_bg = pygame.transform.scale(background_img, (w, h))
         surf.blit(scaled_bg, (0, 0))

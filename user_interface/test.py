@@ -25,7 +25,7 @@ def main():
     assets_vania = os.path.normpath(os.path.join(project_root, "assets", "Vania"))
 
     # 2. Assets laden
-    player_data = load_all_animations(os.path.join(assets_vania, "SPRITES", "player", "idle"), scale_factor=2)
+    player_data = load_all_animations(os.path.join(assets_vania, "SPRITES", "player","sprites", "idle"), scale_factor=2)
     wizard_data = load_all_animations(os.path.join(assets_vania, "SPRITES", "wizard", "idle-sprites"), scale_factor=2)
     angel_data = load_all_animations(os.path.join(assets_vania, "SPRITES", "angel", "sprites", "idle"), scale_factor=2)
     ghoul_data = load_all_animations(os.path.join(assets_vania, "SPRITES", "burning-ghoul", "sprites"), scale_factor=2)
@@ -37,7 +37,7 @@ def main():
     tile_library = apply_tile_aliases(raw_tiles, VANIA_TILE_ALIASES)
 
     # 4. Level-Map Design
-
+    # Wir berechnen die Anzahl der Zeilen passend zur Fensterhöhe
     rows_needed = win_h // TS
     map_width = 64
 
@@ -65,8 +65,8 @@ def main():
     bg_path = os.path.join(assets_vania, "environment", "background.png")
     bg_img = pygame.image.load(bg_path).convert_alpha()
 
-
-
+    # WICHTIG: Erstelle die Level-Surface mit der korrekten Gesamtbreite (64 * 48)
+    # Wir nutzen bg_img hier, damit es über die ganze Level-Länge skaliert wird
     level_surface = create_level_surface(level_map, tile_library, bg_img, TS)
     level_pixel_width = map_width * TS
 
