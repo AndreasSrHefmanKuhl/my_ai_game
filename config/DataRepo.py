@@ -7,9 +7,11 @@ def set_display(width, height, name):
     pygame.display.set_caption(name)
     return screen, width, height
 
-def load_all_animations(base_path, scale_factor=2):
+
+def load_all_animations(base_path, scale_factor=2, target_states=None):
     animations = {}
     if not os.path.exists(base_path): return {}
+
     for folder in os.listdir(base_path):
         folder_path = os.path.join(base_path, folder)
         if os.path.isdir(folder_path):
@@ -20,7 +22,13 @@ def load_all_animations(base_path, scale_factor=2):
                     w, h = img.get_size()
                     img = pygame.transform.scale(img, (int(w * scale_factor), int(h * scale_factor)))
                     frames.append(img)
-            if frames: animations[folder.lower()] = frames
+
+            if frames:
+                # If target_states is provided, map folder name to the logic name
+                state_name = folder.lower()
+                if target_states and state_name in target_states:
+                    state_name = target_states[state_name]
+                animations[state_name] = frames
     return animations
 
 def load_tileset_named_library(path, source_size=16, target_size=48):

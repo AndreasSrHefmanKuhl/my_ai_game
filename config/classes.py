@@ -18,9 +18,9 @@ class Player(pygame.sprite.Sprite):
 
         self.anim_speeds = {
             "stand": 0.15, "walk": 0.15, "punch": 0.15,
-            "kick": 0.12, "crouch": 0.15, "crouchkick": 0.12
+            "kick": 0.12, "crouch": 0.15, "crouchkick": 0.12,"jump":0.15
         }
-        self.locked_states = {"punch", "kick", "crouchkick","crouch"}
+        self.locked_states = {"punch", "kick", "crouchkick","crouch","jump"}
         self.flip = False
         self.image = self.animations[self.state][0]
         self.rect = self.image.get_rect(topleft=(x, y))
