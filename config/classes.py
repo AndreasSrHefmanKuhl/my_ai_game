@@ -79,14 +79,57 @@ class Enemy(pygame.sprite.Sprite):
         self.animations = anim_dict
         self.state = "walk"
         self.anim_index = 0.0
+
+        # Behavior Variables
+        self.speed = 2
+        self.direction = 1  # 1 for Right, -1 for Left
+        self.detection_range = 300
+        self.attack_range = 50
+        self.attack_cooldown = 0
+
         self.image = self.animations[self.state][0]
         self.rect = self.image.get_rect(topleft=(x, y))
 
-    def update(self, dt):
-        frames = self.animations[self.state]
-        self.anim_index += 0.15 * (dt * 60)
-        if self.anim_index >= len(frames): self.anim_index = 0.0
-        self.image = frames[int(self.anim_index)]
+    def update(self, dt, player_rect):
+        # 1. Update Cooldowns
+        if self.attack_cooldown > 0:
+            self.attack_cooldown -= dt
 
-    def draw(self, surface):
-        surface.blit(self.image, self.rect)
+        # 2. Distance to Player
+        dist_x = player_rect.centerx - self.rect.centerx
+        distance = abs(dist_x)
+
+        # 3. AI State Logic
+        if distance < self.attack_range:
+            self.attack()
+        elif distance < self.detection_range:
+            self.chase(dist_x)
+        else:
+            self.patrol()
+
+        # 4. Animation Handling
+        frames = self.animations.get(self.state, self.animations["walk"])
+        self.anim_index += 0.15 * (dt * 60)
+
+        if self.anim_index >= len(frames):
+            if self.state == "attack":  # Return to walk after attacking
+                self.state = "walk"
+            self.anim_index = 0.0
+
+        img = frames[int(self.anim_index)]
+        self.image = pygame.transform.flip(img, self.direction < 0, False)
+
+    def patrol(self):
+        self.state = "walk"
+        self.rect.x += self.direction * self.speed
+        # Note: You can add "turn around" logic here if they hit a wall
+
+    def chase(self, dist_x):
+        self.state = "walk"
+        self.direction = 1 if dist_x > 0 else -1
+        self.rect.x += self.direction * (self.speed * 1.5)
+
+    def attack(self):
+        if self.attack_cooldown <= 0:
+            self.state = "attack"  # Ensure your enemy folder has an 'attack' subfolder
+            self.attack_cooldown = 1.5  # Seconds between hits

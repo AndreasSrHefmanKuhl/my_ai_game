@@ -131,7 +131,7 @@ def main():
         # --- UPDATES ---
         player.update(dt, dx)
         for e in enemies:
-            e.update(dt)
+            e.update(dt,player.rect)
 
         # Camera positioning
         target_cam_x = player.rect.centerx - win_w // 2
