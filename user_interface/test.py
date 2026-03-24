@@ -33,7 +33,7 @@ def main():
     ghoul_data = load_all_animations(os.path.join(assets_vania, "SPRITES", "burning-ghoul","sprites"), scale_factor=2)
 
     # 2. Tileset Setup
-    TS = 48
+    TS = 46
     tileset_path = os.path.join(assets_vania, "environment", "tileset.png")
     raw_tiles = load_tileset_named_library(tileset_path, source_size=16, target_size=TS)
     tile_library = apply_tile_aliases(raw_tiles, VANIA_TILE_ALIASES)
@@ -44,21 +44,21 @@ def main():
     level_map = []
     for r in range(rows_needed):
         if r == rows_needed - 1:
-            level_map.append(["floor_head"] * map_width)
+            row=["floor_head"] * map_width
+            row[3]="P"
+            level_map.append(row)
         elif r == rows_needed - 2:
-            #row = ["."] * map_width
-            level_map.append(["."] * map_width)
+            row = ["."] * map_width
+            level_map.append(row)
         elif  r== rows_needed - 3:
             row = ["."] * map_width
-            row[0] = "P"
             row[14] = "E"
             row[8] = "E"
             level_map.append(row)
-
         else:
             level_map.append(["wall1"] + ["."] * (map_width - 2) + ["wall1"])
 
-    # 4. Initialize Objects
+    # Initialize Objects
     level_tiles, enemies, player = build_level(
         level_map, tile_library, TS, player_data, [wizard_data, angel_data, ghoul_data]
     )
@@ -98,6 +98,8 @@ def main():
             requested_state = "punch"
         elif keys[pygame.K_g]:
             requested_state = "kick"
+        elif keys[pygame.K_h]:
+            requested_state = "crouchkick"
         elif keys[pygame.K_DOWN]:
             requested_state = "crouch"
 
@@ -123,8 +125,8 @@ def main():
         player.on_ground = False
         for t in [tile for tile in level_tiles if tile.is_floor or tile.is_wall]:
             if player.rect.colliderect(t.rect):
-                if player.velocity_y > 0:  # Falling
-                    player.rect.bottom = t.rect.top
+                if player.velocity_y > 0:
+                    player.rect.bottom = t.rect.top -  1  # Sink them 2 pixels into the tile
                     player.velocity_y = 0
                     player.on_ground = True
 

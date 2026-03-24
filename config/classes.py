@@ -132,4 +132,4 @@ class Enemy(pygame.sprite.Sprite):
     def attack(self):
         if self.attack_cooldown <= 0:
             self.state = "attack"  # Ensure your enemy folder has an 'attack' subfolder
-            self.attack_cooldown = 1.5  # Seconds between hits
+            self.attack_cooldown = 0.85  # Seconds between hits
