@@ -126,7 +126,7 @@ def main():
         for t in [tile for tile in level_tiles if tile.is_floor or tile.is_wall]:
             if player.rect.colliderect(t.rect):
                 if player.velocity_y > 0:
-                    player.rect.bottom = t.rect.top -  1  # Sink them 2 pixels into the tile
+                    player.rect.bottom = t.rect.top   # Sink them 2 pixels into the tile
                     player.velocity_y = 0
                     player.on_ground = True
 
@@ -134,6 +134,23 @@ def main():
         player.update(dt, dx)
         for e in enemies:
             e.update(dt,player.rect)
+
+        if player.is_attacking():
+            attack_zone = player.get_attack_rect()
+            for e in enemies:
+                if attack_zone.colliderect(e.rect):
+                    print(f"Hit detected on {type(e).__name__}!")
+
+        if player.is_attacking():
+            attack_zone = player.get_attack_rect()
+            for e in enemies:
+                # Check if the player's fist/foot overlaps the enemy body
+                if attack_zone.colliderect(e.rect):
+                    e.take_damage(1)
+                    print(f"Enemy hit! Health: {e.health}")
+
+        # Clean up dead enemies so they don't stay on screen
+        enemies = [e for e in enemies if not e.is_dead]
 
         # Camera positioning
         target_cam_x = player.rect.centerx - win_w // 2

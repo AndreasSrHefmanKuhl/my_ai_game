@@ -36,6 +36,23 @@ class Player(pygame.sprite.Sprite):
             self.velocity_y = self.jump_speed
             self.on_ground = False
 
+    def get_attack_rect(self):
+        """Calculates a hitbox in front of the player based on direction."""
+        # Create a rect slightly larger/further out than the body
+        hitbox = self.rect.copy()
+        hitbox.width = 40  # Reach of the punch/kick
+
+        if self.flip:  # Facing Left
+            hitbox.right = self.rect.left
+        else:  # Facing Right
+            hitbox.left = self.rect.right
+
+        return hitbox
+
+    def is_attacking(self):
+        """Returns True if the player is in a combat animation frame."""
+        return self.state in ["punch", "kick", "crouchkick"]
+
     def change_state(self, new_state):
         if new_state not in self.animations: return
         if self.state in self.locked_states and new_state != self.state: return
@@ -79,6 +96,8 @@ class Enemy(pygame.sprite.Sprite):
         self.animations = anim_dict
         self.state = "walk"
         self.anim_index = 0.0
+        self.health = 3
+        self.is_dead = False
 
         # Behavior Variables
         self.speed = 2
@@ -89,6 +108,12 @@ class Enemy(pygame.sprite.Sprite):
 
         self.image = self.animations[self.state][0]
         self.rect = self.image.get_rect(topleft=(x, y))
+
+    def take_damage(self, amount):
+        """Reduces health and checks for death."""
+        self.health -= amount
+        if self.health <= 0:
+            self.is_dead = True
 
     def update(self, dt, player_rect):
         # 1. Update Cooldowns
