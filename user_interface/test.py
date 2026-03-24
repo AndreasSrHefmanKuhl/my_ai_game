@@ -72,6 +72,13 @@ def main():
     clock = pygame.time.Clock()
     camera_x = 0
 
+    performance_tracker = {
+        "punch": 0,
+        "kick": 0,
+        "crouchkick": 0,
+        "damage_dealt": 0
+    }
+
     # --- MAIN GAME LOOP ---
     while True:
         dt = clock.tick(60) / 1000.0
@@ -95,10 +102,13 @@ def main():
 
         # Actions (Priority)
         if keys[pygame.K_f]:
+            performance_tracker["punch"] += 1
             requested_state = "punch"
         elif keys[pygame.K_g]:
+            performance_tracker["kick"] += 1
             requested_state = "kick"
         elif keys[pygame.K_h]:
+            performance_tracker["crouchkick"] += 1
             requested_state = "crouchkick"
         elif keys[pygame.K_DOWN]:
             requested_state = "crouch"
@@ -135,19 +145,15 @@ def main():
         for e in enemies:
             e.update(dt,player.rect)
 
-        if player.is_attacking():
-            attack_zone = player.get_attack_rect()
-            for e in enemies:
-                if attack_zone.colliderect(e.rect):
-                    print(f"Hit detected on {type(e).__name__}!")
+
 
         if player.is_attacking():
             attack_zone = player.get_attack_rect()
             for e in enemies:
                 # Check if the player's fist/foot overlaps the enemy body
                 if attack_zone.colliderect(e.rect):
-                    e.take_damage(1)
-                    print(f"Enemy hit! Health: {e.health}")
+                    e.take_damage(1)#
+
 
         # Clean up dead enemies so they don't stay on screen
         enemies = [e for e in enemies if not e.is_dead]
