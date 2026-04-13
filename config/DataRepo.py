@@ -2,10 +2,20 @@ import os
 import pygame
 from config.classes import Tile, Player, Enemy
 
+
+
 def set_display(width, height, name):
     screen = pygame.display.set_mode((width, height))
     pygame.display.set_caption(name)
     return screen, width, height
+
+def show_loading_screen(display, text="Agent generiert neues Level..."):
+    font = pygame.font.SysFont("Arial", 32)
+    text_surf = font.render(text, True, (255, 255, 255))
+    rect = text_surf.get_rect(center=(400, 300)) # Zentriert auf 800x600
+    display.fill((0, 0, 0))
+    display.blit(text_surf, rect)
+    pygame.display.update()
 
 
 def load_all_animations(base_path, scale_factor=2, target_states=None):
@@ -68,6 +78,7 @@ def build_level(level_data, tile_library, tile_size=48, player_data=None, enemy_
 
 
 def create_level_surface(level_data, tile_library, background_img, tile_size=48):
+
     # Korrekte Berechnung der Dimensionen
     cols = len(level_data[0]) if level_data else 0
     rows = len(level_data)
@@ -85,3 +96,54 @@ def create_level_surface(level_data, tile_library, background_img, tile_size=48)
             if cell in tile_library:
                 surf.blit(tile_library[cell], (c_idx * tile_size, r_idx * tile_size))
     return surf
+
+
+def get_metric_data(level_data,perfomance_tracker):
+
+    from user_interface.agent import app
+    from langchain_core.messages import HumanMessage
+
+    """Sends current Gamedata to model and gives back from agent modified level data based on performance of the user"""
+
+
+    prompt_content = f"""
+    You are an Game Designer Agent for 2D platformer games like Castlevania or Super Metroid. 
+    here are the current user-statistics: {perfomance_tracker}
+    and the current level_layout: {level_data}
+
+    Your Task: Raise the difficulty moderately based on the performance of the user.
+    Place more enemies("E") on strategic places change the platforming-pattern.
+    Take care that the player("P") will always be on startpoint.
+    use vania_tile_aliases.py to get the correct tile-names.
+    Return ONLY the modified level_layout as a list of lists.
+    """
+
+    try:
+        # Aufruf des Modells
+        print("--- Agent wird aufgerufen ---")
+        response = app.invoke({
+            "messages": [HumanMessage(content=prompt_content)]
+        })
+
+        # Jetzt ist response sicher vorhanden
+        if response and "messages" in response:
+            final_message = response["messages"][-1].content
+
+            # Reinigung des Outputs
+            clean_content = final_message.replace("```python", "").replace("```", "").strip()
+
+            # Extraktion der Liste
+            start = clean_content.find("[")
+            end = clean_content.rfind("]") + 1
+            if start != -1 and end > 0:
+                clean_content = clean_content[start:end]
+                return eval(clean_content)
+
+    except Exception as e:
+        print(f"Fehler im DataRepo/Agent-Workflow: {e}")
+
+        # Fallback: Wenn oben etwas schiefgeht (oder response None blieb),
+        # wird das alte Level zurückgegeben
+    return level_data
+
+
