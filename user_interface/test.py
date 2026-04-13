@@ -7,7 +7,7 @@ from config.DataRepo import (
     load_tileset_named_library,
     apply_tile_aliases,
     build_level,
-    create_level_surface
+    create_level_surface, show_loading_screen, get_metric_data
 )
 from config.vania_tile_aliases import VANIA_TILE_ALIASES
 
@@ -152,11 +152,44 @@ def main():
             for e in enemies:
                 # Check if the player's fist/foot overlaps the enemy body
                 if attack_zone.colliderect(e.rect):
-                    e.take_damage(1)#
+                    e.take_damage(1)#number needs to be vriable later
 
 
         # Clean up dead enemies so they don't stay on screen
         enemies = [e for e in enemies if not e.is_dead]
+
+        if len(enemies) == 0:
+            # 1. Sofort Ladebildschirm anzeigen, bevor die KI rechnet
+            show_loading_screen(display)
+
+            # 2. KI-Agenten über DataRepo aufrufen
+            # Übergibt das aktuelle Layout und den Performance-Tracker
+            new_level_map = get_metric_data(level_map, performance_tracker)
+
+            if new_level_map:
+                # 3. Altes Level säubern
+                level_tiles.clear()
+                enemies.clear()
+
+                # 4. Variablen aktualisieren
+                level_map = new_level_map
+
+                # 5. Welt neu aufbauen mit den neuen Daten
+                level_tiles, enemies, player = build_level(
+                    level_map,
+                    tile_library,
+                    TS,
+                    player_data,
+                    [wizard_data, angel_data, ghoul_data]
+                )
+
+                # 6. Grafik-Oberfläche neu generieren
+                level_surface = create_level_surface(level_map, tile_library, bg_img, TS)
+
+                # 7. Reset für die neue Runde
+                camera_x = 0
+                for key in performance_tracker:
+                    performance_tracker[key] = 0
 
         # Camera positioning
         target_cam_x = player.rect.centerx - win_w // 2
