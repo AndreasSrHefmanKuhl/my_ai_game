@@ -50,7 +50,7 @@ class Player(pygame.sprite.Sprite):
         """Calculates a hitbox in front of the player based on direction."""
         # Create a rect slightly larger/further out than the body
         hitbox = self.rect.copy()
-        hitbox.width = 20  # Reach of the punch/kick
+        hitbox.width = 5  # Reach of the punch/kick
 
         if self.flip:  # Facing Left
             hitbox.right = self.rect.left
@@ -96,7 +96,7 @@ class Tile:
         self.tile_type = tile_type
         # Logik für Kollision
         self.is_wall = "wall" in tile_type or "brick" in tile_type
-        self.is_floor = "way" in tile_type or "floor" in tile_type
+        self.is_floor = "way" in tile_type or "floor" in tile_type or "head" in tile_type
         self.is_deadly = "dead" in tile_type
 
 
@@ -113,7 +113,7 @@ class Enemy(pygame.sprite.Sprite):
         # Behavior Variables
         self.speed = 2
         self.direction = 1  # 1 for Right, -1 for Left
-        self.detection_range = 300
+        self.detection_range = 5
         self.attack_range = 50
         self.attack_cooldown = 0
 
@@ -126,8 +126,8 @@ class Enemy(pygame.sprite.Sprite):
         if self.health == 0:
             self.is_dead = True
 
-    def update(self, dt, player_rect):
-        #  Update Cooldowns
+    def update(self, dt, player_rect, level_tiles):
+        # Update Cooldowns
         if self.attack_cooldown > 0:
             self.attack_cooldown -= dt
 
@@ -135,35 +135,88 @@ class Enemy(pygame.sprite.Sprite):
         dist_x = player_rect.centerx - self.rect.centerx
         distance = abs(dist_x)
 
-        #  State Logic
+        # Logic Branching - Passing level_tiles to every state
         if distance < self.attack_range:
             self.attack()
         elif distance < self.detection_range:
-            self.chase(dist_x)
+            self.chase(dist_x, level_tiles)
         else:
-            self.patrol()
+            self.patrol(level_tiles)
 
-        #  Animation Handling
-        frames = self.animations.get(self.state, self.animations["walk"])
-        self.anim_index += 0.15 * (dt * 60)
+        # Animation Handling
+        frames = self.animations.get(self.state, self.animations.get("walk"))
+        if frames:
+            self.anim_index += 0.15 * (dt * 60)
+            if self.anim_index >= len(frames):
+                if self.state == "attack":
+                    self.state = "walk"
+                self.anim_index = 0.0
+            img = frames[int(self.anim_index)]
+            self.image = pygame.transform.flip(img, self.direction < 0, False)
 
-        if self.anim_index >= len(frames):
-            if self.state == "attack":  # Return to walk after attacking
-                self.state = "walk"
-            self.anim_index = 0.0
-
-        img = frames[int(self.anim_index)]
-        self.image = pygame.transform.flip(img, self.direction < 0, False)
-
-    def patrol(self):
+    def patrol(self, level_tiles):
         self.state = "walk"
-        self.rect.x += self.direction * self.speed
-        # Note: You can add "turn around" logic here if they hit a wall
 
-    def chase(self, dist_x):
-        self.state = "walk"
-        self.direction = 1 if dist_x > 0 else -1
-        self.rect.x += self.direction * (self.speed * 1.5)
+        # 1. Predictive Step
+        move_step = self.direction * self.speed
+        next_rect = self.rect.copy()
+        next_rect.x += move_step
+
+        # 2. Identify Walkable Tiles
+        # We filter tiles here to speed up the 'any' checks below
+        walkable = [t for t in level_tiles if t.is_floor or t.is_wall]
+        walls = [t for t in level_tiles if t.is_wall]
+
+        # 3. Wall Check
+        hit_wall = any(next_rect.colliderect(t.rect) for t in walls)
+
+        # 4. Edge Detection (Area Sensor)
+        # We check a small box in front of the feet
+        sensor_w = 15
+        s_x = next_rect.right if self.direction > 0 else next_rect.left - sensor_w
+        # Use a deep sensor (20px) to bridge any sprite transparency gaps
+        sensor_rect = pygame.Rect(s_x, self.rect.bottom - 5, sensor_w, 20)
+
+        has_ground = any(sensor_rect.colliderect(t.rect) for t in walkable)
+
+        # 5. The Turn Logic
+        if hit_wall or not has_ground:
+            self.direction *= -1
+            # SNAP and MOVE: Move them away from the edge so the sensor resets
+            self.rect.x += self.direction * (self.speed * 2)
+        else:
+            self.rect.x += move_step
+
+        # 6. Gravity/Ground Snap (CRITICAL)
+        # This prevents the 'jitter' by keeping the feet flush with the tile
+        for t in walkable:
+            if self.rect.colliderect(t.rect):
+                self.rect.bottom = t.rect.top
+
+    def chase(self, dist_x, level_tiles):
+        new_dir = 1 if dist_x > 0 else -1
+        move_speed = self.speed * 1.5
+
+        # Predicted next position
+        next_rect = self.rect.copy()
+        next_rect.x += new_dir * move_speed
+
+        # Reuse the Area Sensor logic
+        sensor_w = 15
+        s_x = next_rect.right if new_dir > 0 else next_rect.left - sensor_w
+        sensor_rect = pygame.Rect(s_x, self.rect.bottom - 5, sensor_w, 20)
+
+        walkable = [t for t in level_tiles if t.is_floor or t.is_wall]
+        has_ground = any(sensor_rect.colliderect(t.rect) for t in walkable)
+        hit_wall = any(next_rect.colliderect(t.rect) for t in walkable if t.is_wall)
+
+        if has_ground and not hit_wall:
+            self.state = "walk"
+            self.direction = new_dir
+            self.rect.x += self.direction * move_speed
+        else:
+            # If the chase path is blocked, patrol so we can turn around
+            self.patrol(level_tiles)
 
     def attack(self):
         if self.attack_cooldown <= 0:

@@ -33,7 +33,7 @@ def main():
     ghoul_data = load_all_animations(os.path.join(assets_vania, "SPRITES", "burning-ghoul","sprites"), scale_factor=2)
 
     #  Tileset Setup
-    TS = 32
+    TS = 36
     tileset_path = os.path.join(assets_vania, "environment", "tileset.png")
     raw_tiles = load_tileset_named_library(tileset_path, source_size=16, target_size=TS)
     tile_library = apply_tile_aliases(raw_tiles, VANIA_TILE_ALIASES)
@@ -68,7 +68,8 @@ def main():
             # Create a 6-tile wide platform further right
             for i in range(18, 24):
                 row[i] = "floor_head"
-            row[21] = "E"  # Enemy on mid platform
+            row[20] = "E"
+             # Enemy on mid platform
 
         # --- PLATFORM 3 ----
         elif r == rows_needed - 10:
@@ -165,8 +166,9 @@ def main():
 
         # --- UPDATES ---
         player.update(dt, dx)
+
         for e in enemies:
-            e.update(dt,player.rect)
+            e.update(dt,player.rect, level_tiles)
 
 
 
@@ -175,8 +177,8 @@ def main():
             for e in enemies:
                 # Check if the player's fist/foot overlaps the enemy body
                 if attack_zone.colliderect(e.rect):
-                    e.take_damage(50)
-                    performance_tracker["damage_dealt"] += 50
+                    e.take_damage(25)
+                    performance_tracker["damage_dealt"] += 25
 
 
         # Clean up dead enemies so they don't stay on screen
@@ -232,8 +234,8 @@ def main():
 
         for e in enemies:
             display.blit(e.image, (e.rect.x - camera_x, e.rect.y))
-            # Draw Enemy Health Bar above their head
-            draw_health_bar(display, e.rect.x - camera_x, e.rect.y - 10, e.health, e.max_health)
+
+
 
         display.blit(player.image, (player.rect.x - camera_x, player.rect.y))
 
