@@ -44,28 +44,39 @@ def main():
     """Level map mit besseren tiles ,sodass ai besser verstehen kann wie level aufbau funktioniert"""
     level_map = []
     for r in range(rows_needed):
-        # 1. Initialize the default row content first
+        # Default row: Side walls with empty space in between
+        row = ["wall1"] + ["."] * (map_width - 2) + ["wall1"]
+
+        # --- GROUND FLOOR ---
         if r == rows_needed - 1:
-
-            row[3] = "P"
-            row[10] = "E"
-            row[16] = "E"
-            row[19] = "E"
             row = ["floor_head"] * map_width
-            level_map.append(row)
+            row[3] = "P"  # Player start
+            row[15] = "E"  # Enemy on ground
+            row[30] = "E"  # Another enemy further right
 
-        elif r == rows_needed - 4:  # Changed from +3 to -4 to appear above the floor
-            # Create an empty row or platform
-            row = ["."] * map_width
-            # Logic for a small platform
-            row[20] = "floor_head"
-            row[21] = "floor_head"
-            row[22] = "floor_head"
-            level_map.append(row)
 
-        else:
-            # Default empty space with walls
-            level_map.append(["wall1"] + ["."] * (map_width - 2) + ["wall1"])
+        # --- PLATFORM 1 (Low, Left) ---
+        elif r == rows_needed - 4:
+            # Create a 5-tile wide platform
+            for i in range(5, 10):
+                row[i] = "floor_head"
+            row[7] = "E"  # Enemy patrolling this platform
+
+        # --- PLATFORM 2 (Mid, Right) ---
+        elif r == rows_needed - 7:
+            # Create a 6-tile wide platform further right
+            for i in range(18, 24):
+                row[i] = "floor_head"
+            row[21] = "E"  # Enemy on mid platform
+
+        # --- PLATFORM 3 (High, Center) ---
+        elif r == rows_needed - 10:
+            # Create a 4-tile wide platform in the middle
+            for i in range(12, 16):
+                row[i] = "floor_head"
+            row[14] = "E"  # Enemy on high platform
+
+        level_map.append(row)
 
     # Initialize Objects
     level_tiles, enemies, player = build_level(
@@ -163,7 +174,8 @@ def main():
             for e in enemies:
                 # Check if the player's fist/foot overlaps the enemy body
                 if attack_zone.colliderect(e.rect):
-                    e.take_damage(1)#number needs to be vriable later
+                    e.take_damage(50)
+                    performance_tracker["damage_dealt"] += 50
 
 
         # Clean up dead enemies so they don't stay on screen
@@ -212,7 +224,7 @@ def main():
         target_cam_x = player.rect.centerx - win_w // 2
         camera_x = max(0, min(target_cam_x, level_pixel_width - win_w))
 
-        # --- RENDERING ---
+
         # --- RENDERING ---
         display.fill((0, 0, 0))
         display.blit(level_surface, (-camera_x, 0))
@@ -224,10 +236,8 @@ def main():
 
         display.blit(player.image, (player.rect.x - camera_x, player.rect.y))
 
-        print(
-            f"DEBUG: Player HP is {getattr(player, 'health', 'MISSING')} / {getattr(player, 'max_health', 'MISSING')}")
 
-        draw_health_bar(display, 20, 20, player.health, player.max_health, width=200, height=20, color=(255, 0, 0))
+        draw_health_bar(display, 20, 20, player.health, player.max_health, width=200, height=10, color=(255, 0, 0))
 
         pygame.display.update()
 

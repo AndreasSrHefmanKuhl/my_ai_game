@@ -88,7 +88,11 @@ def build_level(level_data, tile_library, tile_size=48, player_data=None, enemy_
             if cell == "P" and player_data:
                 player = Player(x, y, player_data)
             elif cell == "E" and enemy_data_list:
-                enemies.append(Enemy(x, y, enemy_data_list[e_idx % len(enemy_data_list)]))
+                # Use the enemy's own image height to align it to the BOTTOM of the tile
+                temp_enemy = Enemy(x, y, enemy_data_list[e_idx % len(enemy_data_list)])
+                # Adjust y so the bottom of the enemy touches the bottom of the tile row
+                temp_enemy.rect.bottom = y + tile_size
+                enemies.append(temp_enemy)
                 e_idx += 1
             elif cell in tile_library:
                 level_tiles.append(Tile(x, y, tile_size, tile_library[cell], cell))

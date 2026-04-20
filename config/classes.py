@@ -106,8 +106,8 @@ class Enemy(pygame.sprite.Sprite):
         self.animations = anim_dict
         self.state = "walk"
         self.anim_index = 0.0
-        self.health = 3
-        self.max_health = 3
+        self.health = 100
+        self.max_health = 100
         self.is_dead = False
 
         # Behavior Variables
