@@ -9,6 +9,24 @@ def set_display(width, height, name):
     pygame.display.set_caption(name)
     return screen, width, height
 
+
+def draw_health_bar(surf, x, y, current, max_val, width=200, height=20, color=(255, 0, 0)):
+    if max_val <= 0: return
+
+    # Draw Background (Black)
+    pygame.draw.rect(surf, (0, 0, 0), (x, y, width, height))
+
+    # Calculate width of red bar
+    ratio = current / max_val
+    fill_width = int(width * ratio)
+
+    # Draw Foreground (Red) - Only if fill_width > 0
+    if fill_width > 0:
+        pygame.draw.rect(surf, color, (x, y, fill_width, height))
+
+    # Draw a white outline so you can see the bar's shape
+    pygame.draw.rect(surf, (255, 255, 255), (x, y, width, height), 1)
+
 def show_loading_screen(display, text="Agent generiert neues Level..."):
     font = pygame.font.SysFont("Arial", 32)
     text_surf = font.render(text, True, (255, 255, 255))
@@ -111,28 +129,37 @@ def get_metric_data(level_data,perfomance_tracker):
     here are the current user-statistics: {perfomance_tracker}
     and the current level_layout: {level_data}
 
-    Your Task: Raise the difficulty moderately based on the performance of the user.
+    Your Task: Raise the difficulty moderately based on the performance of the User.
     Place more enemies("E") on strategic places change the platforming-pattern.
-    Take care that the player("P") will always be on startpoint.
-    use vania_tile_aliases.py to get the correct tile-names.
+    Take care that the player("P") will always be on startpoint Bottom_Left.
+    Take care that player can solve the Level on harder Difficulty. Don't be unfair!
+    Enemies has to stand on ground. They cant be somewhere in the air!
+    You have to make platforming-patterns so the level will get more difficult. In order to make a platform use "way1" and "way2" tiles.  
+    You can use the following tiles to create the new level: 
+    - "way1","way2": way (player and enemies can ONLY walk on this tiles)
+    - "wall1","wall2": wall(can not be used as way or platforming-tiles!)
+    - "." : for showing the background image(needs to be filled for every empty tile place)
+    - "E": for enemies
+    - "P": for player
+    - "dead1" : for deadly tiles 
     Return ONLY the modified level_layout as a list of lists.
     """
 
     try:
-        # Aufruf des Modells
+
         print("--- Agent wird aufgerufen ---")
         response = app.invoke({
             "messages": [HumanMessage(content=prompt_content)]
         })
 
-        # Jetzt ist response sicher vorhanden
+
         if response and "messages" in response:
             final_message = response["messages"][-1].content
 
-            # Reinigung des Outputs
+
             clean_content = final_message.replace("```python", "").replace("```", "").strip()
 
-            # Extraktion der Liste
+            # ectract List from string
             start = clean_content.find("[")
             end = clean_content.rfind("]") + 1
             if start != -1 and end > 0:
@@ -142,8 +169,7 @@ def get_metric_data(level_data,perfomance_tracker):
     except Exception as e:
         print(f"Fehler im DataRepo/Agent-Workflow: {e}")
 
-        # Fallback: Wenn oben etwas schiefgeht (oder response None blieb),
-        # wird das alte Level zurückgegeben
+        #Fallback if Agent is not working
     return level_data
 
 

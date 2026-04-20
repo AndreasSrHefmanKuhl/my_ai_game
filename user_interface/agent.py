@@ -22,7 +22,7 @@ class AgentState(TypedDict):
 #  Setup Model
 model = ChatOpenAI(
     api_key=OPENAI_API_KEY,
-    temperature=0.3,
+    temperature=0.5,
     model= "gpt-4o-mini",
     streaming=True
 ).bind_tools(tools)
@@ -61,18 +61,4 @@ workflow.add_edge("tools", "ai")
 # Compile
 app = workflow.compile()
 
-#  Run Execution
-if __name__ == "__main__":
-    user_prompt = input("Was ist deine Frage? ")
 
-    initial_state = {
-        "messages": [HumanMessage(content=user_prompt)]
-    }
-
-    # Stream the events
-    for output in app.stream(initial_state):
-        for key, value in output.items():
-            print(f"\n[Node: {key}]")
-            for message in value.get("messages", []):
-                message.pretty_print()
-            print("-" * 20)

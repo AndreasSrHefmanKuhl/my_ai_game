@@ -8,6 +8,9 @@ class Player(pygame.sprite.Sprite):
         self.animations = anim_dict
         self.state = "stand"
         self.frame_index = 0.0
+        self.health = 100
+        self.max_health = 100
+        self.is_dead = False
 
         # Physik-Variablen
         self.velocity_y = 0
@@ -25,6 +28,13 @@ class Player(pygame.sprite.Sprite):
         self.image = self.animations[self.state][0]
         self.rect = self.image.get_rect(topleft=(x, y))
 
+    def take_damage(self, amount):
+        self.health -= amount
+        if self.health <= 0:
+            self.health = 0
+            self.is_dead = True
+            self.state = "dead"
+
     def apply_gravity(self):
         """Zieht den Spieler nach unten."""
         self.velocity_y += self.gravity
@@ -40,7 +50,7 @@ class Player(pygame.sprite.Sprite):
         """Calculates a hitbox in front of the player based on direction."""
         # Create a rect slightly larger/further out than the body
         hitbox = self.rect.copy()
-        hitbox.width = 40  # Reach of the punch/kick
+        hitbox.width = 20  # Reach of the punch/kick
 
         if self.flip:  # Facing Left
             hitbox.right = self.rect.left
@@ -97,6 +107,7 @@ class Enemy(pygame.sprite.Sprite):
         self.state = "walk"
         self.anim_index = 0.0
         self.health = 3
+        self.max_health = 3
         self.is_dead = False
 
         # Behavior Variables
@@ -112,19 +123,19 @@ class Enemy(pygame.sprite.Sprite):
     def take_damage(self, amount):
         """Reduces health and checks for death."""
         self.health -= amount
-        if self.health <= 0:
+        if self.health == 0:
             self.is_dead = True
 
     def update(self, dt, player_rect):
-        # 1. Update Cooldowns
+        #  Update Cooldowns
         if self.attack_cooldown > 0:
             self.attack_cooldown -= dt
 
-        # 2. Distance to Player
+        # Distance to Player
         dist_x = player_rect.centerx - self.rect.centerx
         distance = abs(dist_x)
 
-        # 3. AI State Logic
+        #  State Logic
         if distance < self.attack_range:
             self.attack()
         elif distance < self.detection_range:
@@ -132,7 +143,7 @@ class Enemy(pygame.sprite.Sprite):
         else:
             self.patrol()
 
-        # 4. Animation Handling
+        #  Animation Handling
         frames = self.animations.get(self.state, self.animations["walk"])
         self.anim_index += 0.15 * (dt * 60)
 

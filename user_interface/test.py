@@ -7,7 +7,7 @@ from config.DataRepo import (
     load_tileset_named_library,
     apply_tile_aliases,
     build_level,
-    create_level_surface, show_loading_screen, get_metric_data
+    create_level_surface, show_loading_screen, get_metric_data, draw_health_bar
 )
 from config.vania_tile_aliases import VANIA_TILE_ALIASES
 
@@ -22,7 +22,7 @@ def main():
     project_root = os.path.normpath(os.path.join(base_dir, ".."))
     assets_vania = os.path.normpath(os.path.join(project_root, "assets", "Vania"))
 
-    # 1. Load Assets
+    #  Load Assets
     # Pointing to the parent folder so all sub-folders (idle, walk, punch) are loaded into the dict
     player_path = os.path.join(assets_vania, "SPRITES", "player","sprites","idle")
     player_data = load_all_animations(player_path, scale_factor=2)
@@ -32,36 +32,47 @@ def main():
     angel_data = load_all_animations(os.path.join(assets_vania, "SPRITES", "angel","sprites"), scale_factor=2)
     ghoul_data = load_all_animations(os.path.join(assets_vania, "SPRITES", "burning-ghoul","sprites"), scale_factor=2)
 
-    # 2. Tileset Setup
-    TS = 46
+    #  Tileset Setup
+    TS = 32
     tileset_path = os.path.join(assets_vania, "environment", "tileset.png")
     raw_tiles = load_tileset_named_library(tileset_path, source_size=16, target_size=TS)
     tile_library = apply_tile_aliases(raw_tiles, VANIA_TILE_ALIASES)
 
-    # 3. Level Design
+    #  Level Design
     map_width = 64
     rows_needed = win_h // TS
+    """Level map mit besseren tiles ,sodass ai besser verstehen kann wie level aufbau funktioniert"""
     level_map = []
     for r in range(rows_needed):
+        # 1. Initialize the default row content first
         if r == rows_needed - 1:
-            row=["floor_head"] * map_width
-            row[3]="P"
+
+            row[3] = "P"
+            row[10] = "E"
+            row[16] = "E"
+            row[19] = "E"
+            row = ["floor_head"] * map_width
             level_map.append(row)
-        elif r == rows_needed - 2:
+
+        elif r == rows_needed - 4:  # Changed from +3 to -4 to appear above the floor
+            # Create an empty row or platform
             row = ["."] * map_width
+            # Logic for a small platform
+            row[20] = "floor_head"
+            row[21] = "floor_head"
+            row[22] = "floor_head"
             level_map.append(row)
-        elif  r== rows_needed - 3:
-            row = ["."] * map_width
-            row[14] = "E"
-            row[8] = "E"
-            level_map.append(row)
+
         else:
+            # Default empty space with walls
             level_map.append(["wall1"] + ["."] * (map_width - 2) + ["wall1"])
 
     # Initialize Objects
     level_tiles, enemies, player = build_level(
         level_map, tile_library, TS, player_data, [wizard_data, angel_data, ghoul_data]
     )
+    player.health = 100
+    player.max_health = 100
 
     # Background Surface
     bg_path = os.path.join(assets_vania, "environment", "background.png")
@@ -158,23 +169,27 @@ def main():
         # Clean up dead enemies so they don't stay on screen
         enemies = [e for e in enemies if not e.is_dead]
 
+        for e in enemies:
+            if e.state == "attack" and e.rect.colliderect(player.rect):
+                player.take_damage(10)
+
         if len(enemies) == 0:
-            # 1. Sofort Ladebildschirm anzeigen, bevor die KI rechnet
+            # instant show of loading screen while agent has been called
             show_loading_screen(display)
 
-            # 2. KI-Agenten über DataRepo aufrufen
-            # Übergibt das aktuelle Layout und den Performance-Tracker
+            # call agent over datarepo
+            # gives current player data and levelmap
             new_level_map = get_metric_data(level_map, performance_tracker)
 
             if new_level_map:
-                # 3. Altes Level säubern
+                # clean up old world
                 level_tiles.clear()
                 enemies.clear()
 
-                # 4. Variablen aktualisieren
+                # update level map
                 level_map = new_level_map
 
-                # 5. Welt neu aufbauen mit den neuen Daten
+                # build new world with new data
                 level_tiles, enemies, player = build_level(
                     level_map,
                     tile_library,
@@ -182,11 +197,13 @@ def main():
                     player_data,
                     [wizard_data, angel_data, ghoul_data]
                 )
+                player.health = 100
+                player.max_health = 100
 
-                # 6. Grafik-Oberfläche neu generieren
+                # grafical surface
                 level_surface = create_level_surface(level_map, tile_library, bg_img, TS)
 
-                # 7. Reset für die neue Runde
+                # reset for new round
                 camera_x = 0
                 for key in performance_tracker:
                     performance_tracker[key] = 0
@@ -196,13 +213,21 @@ def main():
         camera_x = max(0, min(target_cam_x, level_pixel_width - win_w))
 
         # --- RENDERING ---
+        # --- RENDERING ---
         display.fill((0, 0, 0))
         display.blit(level_surface, (-camera_x, 0))
 
         for e in enemies:
             display.blit(e.image, (e.rect.x - camera_x, e.rect.y))
+            # Draw Enemy Health Bar above their head
+            draw_health_bar(display, e.rect.x - camera_x, e.rect.y - 10, e.health, e.max_health)
 
         display.blit(player.image, (player.rect.x - camera_x, player.rect.y))
+
+        print(
+            f"DEBUG: Player HP is {getattr(player, 'health', 'MISSING')} / {getattr(player, 'max_health', 'MISSING')}")
+
+        draw_health_bar(display, 20, 20, player.health, player.max_health, width=200, height=20, color=(255, 0, 0))
 
         pygame.display.update()
 
