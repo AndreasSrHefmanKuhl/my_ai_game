@@ -7,7 +7,7 @@ from config.DataRepo import (
     load_tileset_named_library,
     apply_tile_aliases,
     build_level,
-    create_level_surface, show_loading_screen, get_metric_data, draw_health_bar
+    create_level_surface, show_loading_screen, let_agent_cook, draw_health_bar
 )
 from config.vania_tile_aliases import VANIA_TILE_ALIASES
 
@@ -41,7 +41,8 @@ def main():
     #  Level Design
     map_width = 64
     rows_needed = win_h // TS
-    """Level map mit besseren tiles ,sodass ai besser verstehen kann wie level aufbau funktioniert"""
+
+    """level_map with better tiles so agent woulb be able to understand better level-layout"""
     level_map = []
     for r in range(rows_needed):
         # Default row: Side walls with empty space in between
@@ -50,9 +51,9 @@ def main():
         # --- GROUND FLOOR ---
         if r == rows_needed - 1:
             row = ["floor_head"] * map_width
-            row[3] = "P"  # Player start
-            row[15] = "E"  # Enemy on ground
-            row[30] = "E"  # Another enemy further right
+            row[3] = "P"
+            row[15] = "E"
+            row[30] = "E"
 
 
         # --- PLATFORM 1 (Low, Left) ---
@@ -69,7 +70,7 @@ def main():
                 row[i] = "floor_head"
             row[21] = "E"  # Enemy on mid platform
 
-        # --- PLATFORM 3 (High, Center) ---
+        # --- PLATFORM 3 ----
         elif r == rows_needed - 10:
             # Create a 4-tile wide platform in the middle
             for i in range(12, 16):
@@ -158,7 +159,7 @@ def main():
         for t in [tile for tile in level_tiles if tile.is_floor or tile.is_wall]:
             if player.rect.colliderect(t.rect):
                 if player.velocity_y > 0:
-                    player.rect.bottom = t.rect.top   # Sink them 2 pixels into the tile
+                    player.rect.bottom = t.rect.top
                     player.velocity_y = 0
                     player.on_ground = True
 
@@ -190,8 +191,8 @@ def main():
             show_loading_screen(display)
 
             # call agent over datarepo
-            # gives current player data and levelmap
-            new_level_map = get_metric_data(level_map, performance_tracker)
+            # gives current player data and level-map
+            new_level_map = let_agent_cook(level_map, performance_tracker)
 
             if new_level_map:
                 # clean up old world

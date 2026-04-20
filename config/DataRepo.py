@@ -120,7 +120,7 @@ def create_level_surface(level_data, tile_library, background_img, tile_size=48)
     return surf
 
 
-def get_metric_data(level_data,perfomance_tracker):
+def let_agent_cook(level_data,perfomance_tracker):
 
     from user_interface.agent import app
     from langchain_core.messages import HumanMessage
