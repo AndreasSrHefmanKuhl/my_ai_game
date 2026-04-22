@@ -4,6 +4,8 @@ from config.classes import Tile, Player, Enemy
 
 
 
+""" graphical functions """
+
 def set_display(width, height, name):
     screen = pygame.display.set_mode((width, height))
     pygame.display.set_caption(name)
@@ -43,16 +45,98 @@ def show_game_over_screen(display, player, enemies, score, high_score):
     display.blit(text_surf, rect)
     pygame.display.update()
 
-def show_start_screen(display, text = "Welcome to THE CASTLE!"):
-    font = pygame.font.SysFont("Arial", 32)
-    text_surf = font.render(text , True, (255, 255, 255))
-    rect = text_surf.get_rect(center=(400, 300))
-    display.fill((0, 0, 0))
-    display.blit(text_surf, rect)
-    pygame.display.update()
+
+def show_start_screen(display, text="Welcome to THE CASTLE!"):
+    from config.database import login_user, register_user
+    font = pygame.font.SysFont("Arial", 28)
+    input_font = pygame.font.SysFont("Arial", 24)
+
+    username = ""
+    password = ""
+    active_field = "username"
+    mode = "LOGIN"  # New: tracks whether we are logging in or registering
+    logged_in_id = None
+
+    while logged_in_id is None:
+        display.fill((0, 0, 0))
+
+        # Render Main Title/Feedback
+        instr_surf = font.render(text, True, (255, 255, 255))
+        display.blit(instr_surf, (400 - instr_surf.get_width() // 2, 100))
+
+        # Render Current Mode (Login vs Register)
+        mode_color = (0, 255, 255) if mode == "LOGIN" else (0, 255, 0)
+        mode_surf = font.render(f"MODE: {mode}", True, mode_color)
+        display.blit(mode_surf, (400 - mode_surf.get_width() // 2, 180))
+
+        # Render Input Boxes
+        u_color = (255, 255, 0) if active_field == "username" else (200, 200, 200)
+        p_color = (255, 255, 0) if active_field == "password" else (200, 200, 200)
+
+        u_surf = input_font.render(f"Username: {username}", True, u_color)
+        p_surf = input_font.render(f"Password: {'*' * len(password)}", True, p_color)
+
+        display.blit(u_surf, (250, 250))
+        display.blit(p_surf, (250, 300))
+
+        # Instructions
+        hint_text = f"TAB: Switch Field | L: Login Mode | R: Register Mode"
+        hint = input_font.render(hint_text, True, (150, 150, 150))
+        enter_hint = input_font.render(f"Press ENTER to {mode.lower()}", True, (100, 100, 100))
+
+        display.blit(hint, (400 - hint.get_width() // 2, 400))
+        display.blit(enter_hint, (400 - enter_hint.get_width() // 2, 440))
+
+        pygame.display.update()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+
+            if event.type == pygame.KEYDOWN:
+                # Mode Switching
+                if event.key == pygame.K_l:
+                    mode = "LOGIN"
+                elif event.key == pygame.K_r:
+                    mode = "REGISTER"
+
+                # Logic Execution
+                elif event.key == pygame.K_RETURN:
+                    if mode == "LOGIN":
+                        logged_in_id = login_user(username, password)
+                        if not logged_in_id:
+                            text = "Login Failed! Try Again."
+                    else:
+                        # Assuming register_user returns the new user ID or True
+                        success = register_user(username, password)
+                        if success:
+                            text = "Registered! Now please Login."
+                            mode = "LOGIN"
+                        else:
+                            text = "Registration Failed (User might exist)."
+
+                elif event.key == pygame.K_TAB:
+                    active_field = "password" if active_field == "username" else "username"
+
+                elif event.key == pygame.K_BACKSPACE:
+                    if active_field == "username":
+                        username = username[:-1]
+                    else:
+                        password = password[:-1]
+                else:
+                    # Filter out non-printable characters or system keys
+                    if event.unicode.isprintable():
+                        if active_field == "username":
+                            username += event.unicode
+                        else:
+                            password += event.unicode
+
+    return logged_in_id
 
 
 
+""" data loading functions """
 
 def load_all_animations(base_path, scale_factor=2, target_states=None):
     animations = {}
@@ -96,6 +180,11 @@ def apply_tile_aliases(raw_library, alias_dict):
         if raw_name in raw_library:
             curated[curated_name] = raw_library[raw_name]
     return curated
+
+
+
+""" level building functions"""
+
 
 def get_level_map(win_h,tile_size,map_width):
     rows_needed = win_h // tile_size
@@ -170,14 +259,14 @@ def build_level(level_data, tile_library, tile_size=48, player_data=None, enemy_
 
 def create_level_surface(level_data, tile_library, background_img, tile_size=48):
 
-    # Korrekte Berechnung der Dimensionen
+    # Calculate the size of the level surface based on the level data
     cols = len(level_data[0]) if level_data else 0
     rows = len(level_data)
     w, h = cols * tile_size, rows * tile_size
 
     surf = pygame.Surface((w, h)).convert_alpha()
 
-    # Hintergrund auf die volle LEVEL-Größe skalieren, nicht nur Screen-Größe
+   # Draw the background image if provided
     if background_img:
         scaled_bg = pygame.transform.scale(background_img, (w, h))
         surf.blit(scaled_bg, (0, 0))
@@ -188,6 +277,8 @@ def create_level_surface(level_data, tile_library, background_img, tile_size=48)
                 surf.blit(tile_library[cell], (c_idx * tile_size, r_idx * tile_size))
     return surf
 
+
+""" ai agent intergated functions"""
 
 def let_agent_cook(level_data,perfomance_tracker):
 
@@ -244,5 +335,7 @@ def let_agent_cook(level_data,perfomance_tracker):
 
         #Fallback if Agent is not working
     return level_data
+
+
 
 
