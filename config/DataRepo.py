@@ -35,6 +35,24 @@ def show_loading_screen(display, text="Agent generiert neues Level..."):
     display.blit(text_surf, rect)
     pygame.display.update()
 
+def show_game_over_screen(display, player, enemies, score, high_score):
+    font = pygame.font.SysFont("Arial", 64)
+    text_surf = font.render("GAME OVER", True, (255, 0, 0))
+    rect = text_surf.get_rect(center=(400, 300))
+    display.fill((0, 0, 0))
+    display.blit(text_surf, rect)
+    pygame.display.update()
+
+def show_start_screen(display, text = "Welcome to THE CASTLE!"):
+    font = pygame.font.SysFont("Arial", 32)
+    text_surf = font.render(text , True, (255, 255, 255))
+    rect = text_surf.get_rect(center=(400, 300))
+    display.fill((0, 0, 0))
+    display.blit(text_surf, rect)
+    pygame.display.update()
+
+
+
 
 def load_all_animations(base_path, scale_factor=2, target_states=None):
     animations = {}
@@ -79,6 +97,58 @@ def apply_tile_aliases(raw_library, alias_dict):
             curated[curated_name] = raw_library[raw_name]
     return curated
 
+def get_level_map(win_h,tile_size,map_width):
+    rows_needed = win_h // tile_size
+    level_map = []
+    for r in range(rows_needed):
+        # Default row: Side walls with empty space in between
+        row = ["wall1"] + ["."] * (map_width - 2) + ["wall1"]
+
+        # --- GROUND FLOOR ---
+        if r == rows_needed - 1:
+            row = ["floor_ground"] + ["floor_ground1"] * map_width
+        elif r == rows_needed - 2:
+            row = ["floor_head"] * map_width
+            row[3] = "P"
+            row[25] = "E"
+            row[30] = "E"
+            for i in range(15, 18):
+                row[i] = "dead_01"
+
+
+
+        # --- PLATFORM 1 (Low, Left) ---
+        elif r == rows_needed - 7:
+
+            for i in range(5, 10):
+                row[i] = "floor_head"
+        elif r == rows_needed - 8:
+            row[7] = "E"
+
+        # --- PLATFORM 2 (Mid, Right) ---
+        elif r == rows_needed - 9:
+            for i in range(18, 24):
+                row[i] = "floor_ground"
+        elif r == rows_needed - 10:
+
+            for i in range(18, 24):
+                row[i] = "floor_head"
+        elif r == rows_needed - 11:
+            row[20] = "E"
+
+
+        # --- PLATFORM 3 ----
+        elif r == rows_needed - 15:
+            # Create a 4-tile wide platform in the middle
+            for i in range(12, 16):
+                row[i] = "floor_head"
+        elif r == rows_needed - 16:
+            row[14] = "E"  # Enemy on high platform
+
+        level_map.append(row)
+
+    return level_map
+
 def build_level(level_data, tile_library, tile_size=48, player_data=None, enemy_data_list=None):
     level_tiles, enemies, player = [], [], None
     e_idx = 0
@@ -90,7 +160,6 @@ def build_level(level_data, tile_library, tile_size=48, player_data=None, enemy_
             elif cell == "E" and enemy_data_list:
                 # Use the enemy's own image height to align it to the BOTTOM of the tile
                 temp_enemy = Enemy(x, y, enemy_data_list[e_idx % len(enemy_data_list)])
-                # Adjust y so the bottom of the enemy touches the bottom of the tile row
                 temp_enemy.rect.bottom = y + tile_size
                 enemies.append(temp_enemy)
                 e_idx += 1
@@ -145,7 +214,7 @@ def let_agent_cook(level_data,perfomance_tracker):
     - "." : for showing the background image(needs to be filled for every empty tile place)
     - "E": for enemies
     - "P": for player
-    - "dead1" : for deadly tiles 
+    
     Return ONLY the modified level_layout as a list of lists.
     """
 

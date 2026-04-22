@@ -30,7 +30,7 @@ class Player(pygame.sprite.Sprite):
 
     def take_damage(self, amount):
         self.health -= amount
-        if self.health <= 0:
+        if self.health == 0:
             self.health = 0
             self.is_dead = True
             self.state = "dead"
@@ -157,41 +157,43 @@ class Enemy(pygame.sprite.Sprite):
     def patrol(self, level_tiles):
         self.state = "walk"
 
-        # 1. Predictive Step
+        # 1. Predictive Rect (Where we WANT to go)
         move_step = self.direction * self.speed
         next_rect = self.rect.copy()
         next_rect.x += move_step
 
-        # 2. Identify Walkable Tiles
-        # We filter tiles here to speed up the 'any' checks below
-        walkable = [t for t in level_tiles if t.is_floor or t.is_wall]
-        walls = [t for t in level_tiles if t.is_wall]
+        # 2. Wall Detection
+        hit_wall = any(t.rect.colliderect(next_rect) for t in level_tiles if t.is_wall)
 
-        # 3. Wall Check
-        hit_wall = any(next_rect.colliderect(t.rect) for t in walls)
-
-        # 4. Edge Detection (Area Sensor)
-        # We check a small box in front of the feet
-        sensor_w = 15
-        s_x = next_rect.right if self.direction > 0 else next_rect.left - sensor_w
-        # Use a deep sensor (20px) to bridge any sprite transparency gaps
-        sensor_rect = pygame.Rect(s_x, self.rect.bottom - 5, sensor_w, 20)
-
-        has_ground = any(sensor_rect.colliderect(t.rect) for t in walkable)
-
-        # 5. The Turn Logic
-        if hit_wall or not has_ground:
-            self.direction *= -1
-            # SNAP and MOVE: Move them away from the edge so the sensor resets
-            self.rect.x += self.direction * (self.speed * 2)
+        # 3. Robust Edge Detection (Area, not Point)
+        # We check a 20px wide box in front of the feet
+        sensor_w = 20
+        if self.direction > 0:
+            sensor_x = next_rect.right
         else:
-            self.rect.x += move_step
+            sensor_x = next_rect.left - sensor_w
 
-        # 6. Gravity/Ground Snap (CRITICAL)
-        # This prevents the 'jitter' by keeping the feet flush with the tile
-        for t in walkable:
-            if self.rect.colliderect(t.rect):
-                self.rect.bottom = t.rect.top
+        # Place sensor 5px deep into the tile row
+        sensor_rect = pygame.Rect(sensor_x, self.rect.bottom - 5, sensor_w, 15)
+
+        has_ground = False
+        for t in level_tiles:
+            if (t.is_floor or t.is_wall) and sensor_rect.colliderect(t.rect):
+                has_ground = True
+                break
+
+        # 4. THE JITTER BREAKER
+        if hit_wall or not has_ground:
+            # Step A: Flip direction
+            self.direction *= -1
+
+            # Step B: DISPLACEMENT (Teleport 5 pixels away from the edge)
+            # This ensures that in the NEXT frame, the sensor isn't still
+            # hanging off the edge of the platform.
+            self.rect.x += self.direction * 5
+        else:
+            # No edge? Move normally
+            self.rect.x += move_step
 
     def chase(self, dist_x, level_tiles):
         new_dir = 1 if dist_x > 0 else -1
@@ -202,9 +204,9 @@ class Enemy(pygame.sprite.Sprite):
         next_rect.x += new_dir * move_speed
 
         # Reuse the Area Sensor logic
-        sensor_w = 15
+        sensor_w = 5
         s_x = next_rect.right if new_dir > 0 else next_rect.left - sensor_w
-        sensor_rect = pygame.Rect(s_x, self.rect.bottom - 5, sensor_w, 20)
+        sensor_rect = pygame.Rect(s_x, self.rect.bottom - 5, sensor_w, 5)
 
         walkable = [t for t in level_tiles if t.is_floor or t.is_wall]
         has_ground = any(sensor_rect.colliderect(t.rect) for t in walkable)
@@ -215,10 +217,10 @@ class Enemy(pygame.sprite.Sprite):
             self.direction = new_dir
             self.rect.x += self.direction * move_speed
         else:
-            # If the chase path is blocked, patrol so we can turn around
+            # If the chase path is blocked, patrol so can turn around
             self.patrol(level_tiles)
 
     def attack(self):
         if self.attack_cooldown <= 0:
-            self.state = "attack"  # Ensure your enemy folder has an 'attack' subfolder
+            self.state = "attack"
             self.attack_cooldown = 0.85  # Seconds between hits

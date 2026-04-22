@@ -7,7 +7,7 @@ from config.DataRepo import (
     load_tileset_named_library,
     apply_tile_aliases,
     build_level,
-    create_level_surface, show_loading_screen, let_agent_cook, draw_health_bar
+    create_level_surface, show_loading_screen, let_agent_cook, draw_health_bar, get_level_map
 )
 from config.vania_tile_aliases import VANIA_TILE_ALIASES
 
@@ -15,6 +15,8 @@ from config.vania_tile_aliases import VANIA_TILE_ALIASES
 def main():
     pygame.init()
     win_w, win_h = 800, 600
+    TS = 36
+    map_width = 64
     display, dw, dh = set_display(win_w, win_h, "Schaolin Vania")
 
     # Dynamic pathing
@@ -33,53 +35,12 @@ def main():
     ghoul_data = load_all_animations(os.path.join(assets_vania, "SPRITES", "burning-ghoul","sprites"), scale_factor=2)
 
     #  Tileset Setup
-    TS = 36
     tileset_path = os.path.join(assets_vania, "environment", "tileset.png")
     raw_tiles = load_tileset_named_library(tileset_path, source_size=16, target_size=TS)
     tile_library = apply_tile_aliases(raw_tiles, VANIA_TILE_ALIASES)
 
     #  Level Design
-    map_width = 64
-    rows_needed = win_h // TS
-
-    """level_map with better tiles so agent woulb be able to understand better level-layout"""
-    level_map = []
-    for r in range(rows_needed):
-        # Default row: Side walls with empty space in between
-        row = ["wall1"] + ["."] * (map_width - 2) + ["wall1"]
-
-        # --- GROUND FLOOR ---
-        if r == rows_needed - 1:
-            row = ["floor_head"] * map_width
-            row[3] = "P"
-            row[15] = "E"
-            row[30] = "E"
-
-
-        # --- PLATFORM 1 (Low, Left) ---
-        elif r == rows_needed - 4:
-            # Create a 5-tile wide platform
-            for i in range(5, 10):
-                row[i] = "floor_head"
-            row[7] = "E"  # Enemy patrolling this platform
-
-        # --- PLATFORM 2 (Mid, Right) ---
-        elif r == rows_needed - 7:
-            # Create a 6-tile wide platform further right
-            for i in range(18, 24):
-                row[i] = "floor_head"
-            row[20] = "E"
-             # Enemy on mid platform
-
-        # --- PLATFORM 3 ----
-        elif r == rows_needed - 10:
-            # Create a 4-tile wide platform in the middle
-            for i in range(12, 16):
-                row[i] = "floor_head"
-            row[14] = "E"  # Enemy on high platform
-
-        level_map.append(row)
-
+    level_map = get_level_map(win_h,TS,map_width)
     # Initialize Objects
     level_tiles, enemies, player = build_level(
         level_map, tile_library, TS, player_data, [wizard_data, angel_data, ghoul_data]
@@ -215,7 +176,7 @@ def main():
                 player.health = 100
                 player.max_health = 100
 
-                # grafical surface
+                # graphical surface
                 level_surface = create_level_surface(level_map, tile_library, bg_img, TS)
 
                 # reset for new round
@@ -233,7 +194,7 @@ def main():
         display.blit(level_surface, (-camera_x, 0))
 
         for e in enemies:
-            display.blit(e.image, (e.rect.x - camera_x, e.rect.y))
+            display.blit(e.image, (int(e.rect.x - camera_x), int(e.rect.y)))
 
 
 
