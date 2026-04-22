@@ -37,7 +37,7 @@ def show_loading_screen(display, text="Agent generiert neues Level..."):
     display.blit(text_surf, rect)
     pygame.display.update()
 
-def show_game_over_screen(display, player, enemies, score, high_score):
+def show_game_over_screen(display):
     font = pygame.font.SysFont("Arial", 64)
     text_surf = font.render("GAME OVER", True, (255, 0, 0))
     rect = text_surf.get_rect(center=(400, 300))

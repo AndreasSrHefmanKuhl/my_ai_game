@@ -7,7 +7,8 @@ from config.DataRepo import (
     load_tileset_named_library,
     apply_tile_aliases,
     build_level,
-    create_level_surface, show_loading_screen, let_agent_cook, draw_health_bar, get_level_map, show_start_screen
+    create_level_surface, show_loading_screen, let_agent_cook, draw_health_bar, get_level_map, show_start_screen,
+    show_game_over_screen
 )
 from config.database import init_db
 from config.vania_tile_aliases import VANIA_TILE_ALIASES
@@ -142,8 +143,8 @@ def main():
             for e in enemies:
                 # Check if the player's fist/foot overlaps the enemy body
                 if attack_zone.colliderect(e.rect):
-                    e.take_damage(25)
-                    performance_tracker["damage_dealt"] += 25
+                    e.take_damage(2.5)
+                    performance_tracker["damage_dealt"] += 2.5
 
 
         # Clean up dead enemies so they don't stay on screen
@@ -151,15 +152,19 @@ def main():
 
         for e in enemies:
             if e.state == "attack" and e.rect.colliderect(player.rect):
-                player.take_damage(10)
+                player.take_damage(0.1)
 
-        if len(enemies) == 0:
-            # instant show of loading screen while agent has been called
+        if player.health == 0:
+            show_game_over_screen(display)
+            pygame.quit()
+
+        elif len(enemies) == 0 and player.health >=0:
             show_loading_screen(display)
 
             # call agent over datarepo
             # gives current player data and level-map
             new_level_map = let_agent_cook(level_map, performance_tracker)
+
 
             if new_level_map:
                 # clean up old world
@@ -191,6 +196,8 @@ def main():
         # Camera positioning
         target_cam_x = player.rect.centerx - win_w // 2
         camera_x = max(0, min(target_cam_x, level_pixel_width - win_w))
+
+
 
 
         # --- RENDERING ---
