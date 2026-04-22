@@ -7,17 +7,21 @@ from config.DataRepo import (
     load_tileset_named_library,
     apply_tile_aliases,
     build_level,
-    create_level_surface, show_loading_screen, let_agent_cook, draw_health_bar, get_level_map
+    create_level_surface, show_loading_screen, let_agent_cook, draw_health_bar, get_level_map, show_start_screen
 )
+from config.database import init_db
 from config.vania_tile_aliases import VANIA_TILE_ALIASES
 
 
 def main():
     pygame.init()
+    init_db()
     win_w, win_h = 800, 600
     TS = 36
     map_width = 64
+
     display, dw, dh = set_display(win_w, win_h, "Schaolin Vania")
+    user_id = show_start_screen(display)
 
     # Dynamic pathing
     base_dir = os.path.dirname(os.path.abspath(__file__))
