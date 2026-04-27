@@ -26,7 +26,7 @@ VANIA_TILE_ALIASES: dict[str, str] = {
     "bg_do_bot1":"vania_103",
 
 
-
+    # ground
     "way": "vania_241",
     "way1": "vania_223",
     "way2": "vania_225",
@@ -41,7 +41,7 @@ VANIA_TILE_ALIASES: dict[str, str] = {
     "wall3":"vania_096",
     "wall4":"vania_097",
 
-    # hazards (optional naming; your Tile class marks deadly if name contains "lava" or "spike")
+    # deadly tiles
     "dead_01": "vania_260",
     "dead_02": "vania_261",
 }

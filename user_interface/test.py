@@ -154,15 +154,13 @@ def main():
             if e.state == "attack" and e.rect.colliderect(player.rect):
                 player.take_damage(0.1)
 
-        if player.health == 0:
+        # win conditions and losses
+        if player.health <= 0:
             show_game_over_screen(display)
             pygame.quit()
 
         elif len(enemies) == 0 and player.health >=0:
             show_loading_screen(display)
-
-            # call agent over datarepo
-            # gives current player data and level-map
             new_level_map = let_agent_cook(level_map, performance_tracker)
 
 

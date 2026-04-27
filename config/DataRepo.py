@@ -1,8 +1,6 @@
 import os
 import pygame
-from config.classes import Tile, Player, Enemy
-
-
+from config.classes import Tile, Player, Enemy, Endboss
 
 """ graphical functions """
 
@@ -26,7 +24,7 @@ def draw_health_bar(surf, x, y, current, max_val, width=200, height=20, color=(2
     if fill_width > 0:
         pygame.draw.rect(surf, color, (x, y, fill_width, height))
 
-    # Draw a white outline so you can see the bar's shape
+    # Drawwhite outline for bar's shape
     pygame.draw.rect(surf, (255, 255, 255), (x, y, width, height), 1)
 
 def show_loading_screen(display, text="Agent generiert neues Level..."):
@@ -65,7 +63,7 @@ def show_start_screen(display, text="Welcome to THE CASTLE!"):
         display.blit(instr_surf, (400 - instr_surf.get_width() // 2, 100))
 
         # Render Current Mode (Login vs Register)
-        mode_color = (0, 255, 255) if mode == "LOGIN" else (0, 255, 0)
+        mode_color = (0, 255, 255) if mode == "LOGIN" else (0, 255, 0) if mode == "REGISTER" else (255,0,0)
         mode_surf = font.render(f"MODE: {mode}", True, mode_color)
         display.blit(mode_surf, (400 - mode_surf.get_width() // 2, 180))
 
@@ -80,7 +78,7 @@ def show_start_screen(display, text="Welcome to THE CASTLE!"):
         display.blit(p_surf, (250, 300))
 
         # Instructions
-        hint_text = f"TAB: Switch Field | L: Login Mode | R: Register Mode"
+        hint_text = f"TAB: Switch Field | L: Login Mode | R: Register Mode | D: Delete Mode"
         hint = input_font.render(hint_text, True, (150, 150, 150))
         enter_hint = input_font.render(f"Press ENTER to {mode.lower()}", True, (100, 100, 100))
 
@@ -100,21 +98,25 @@ def show_start_screen(display, text="Welcome to THE CASTLE!"):
                     mode = "LOGIN"
                 elif event.key == pygame.K_r:
                     mode = "REGISTER"
+                elif event.key == pygame.K_d:
+                    mode = 'DELETE'
 
                 # Logic Execution
                 elif event.key == pygame.K_RETURN:
                     if mode == "LOGIN":
                         logged_in_id = login_user(username, password)
                         if not logged_in_id:
-                            text = "Login Failed! Try Again."
+                            text = "Login Failed! Try again or regiter yourself please!"
                     else:
-                        # Assuming register_user returns the new user ID or True
+
                         success = register_user(username, password)
                         if success:
                             text = "Registered! Now please Login."
                             mode = "LOGIN"
                         else:
                             text = "Registration Failed (User might exist)."
+
+
 
                 elif event.key == pygame.K_TAB:
                     active_field = "password" if active_field == "username" else "username"
@@ -247,11 +249,14 @@ def build_level(level_data, tile_library, tile_size=48, player_data=None, enemy_
             if cell == "P" and player_data:
                 player = Player(x, y, player_data)
             elif cell == "E" and enemy_data_list:
-                # Use the enemy's own image height to align it to the BOTTOM of the tile
                 temp_enemy = Enemy(x, y, enemy_data_list[e_idx % len(enemy_data_list)])
                 temp_enemy.rect.bottom = y + tile_size
                 enemies.append(temp_enemy)
                 e_idx += 1
+            elif cell == "G":
+
+                new_boss = Endboss(x, y, enemy_data_list["ghoul"])
+                enemies.append(new_boss)
             elif cell in tile_library:
                 level_tiles.append(Tile(x, y, tile_size, tile_library[cell], cell))
     return level_tiles, enemies, player
@@ -259,7 +264,7 @@ def build_level(level_data, tile_library, tile_size=48, player_data=None, enemy_
 
 def create_level_surface(level_data, tile_library, background_img, tile_size=48):
 
-    # Calculate the size of the level surface based on the level data
+    #
     cols = len(level_data[0]) if level_data else 0
     rows = len(level_data)
     w, h = cols * tile_size, rows * tile_size
@@ -280,34 +285,34 @@ def create_level_surface(level_data, tile_library, background_img, tile_size=48)
 
 """ ai agent intergated functions"""
 
-def let_agent_cook(level_data,perfomance_tracker):
+def let_agent_cook(level_data,performance_tracker,boss_allowed=False):
 
     from user_interface.agent import app
     from langchain_core.messages import HumanMessage
 
     """Sends current Gamedata to model and gives back from agent modified level data based on performance of the user"""
 
+    boss_rule = ""
+    if boss_allowed:
+        boss_rule = "CRITICAL: Place exactly ONE 'G' (Endboss) at the far right. It MUST be on a solid 'way' tile."
+    else:
+        boss_rule = "DO NOT place a 'G' tile. Use 'E' for standard enemies only."
 
-    prompt_content = f"""
-    You are an Game Designer Agent for 2D platformer games like Castlevania or Super Metroid. 
-    here are the current user-statistics: {perfomance_tracker}
-    and the current level_layout: {level_data}
 
-    Your Task: Raise the difficulty moderately based on the performance of the User.
-    Place more enemies("E") on strategic places change the platforming-pattern.
-    Take care that the player("P") will always be on startpoint Bottom_Left.
-    Take care that player can solve the Level on harder Difficulty. Don't be unfair!
-    Enemies has to stand on ground. They cant be somewhere in the air!
-    You have to make platforming-patterns so the level will get more difficult. In order to make a platform use "way1" and "way2" tiles.  
-    You can use the following tiles to create the new level: 
-    - "way1","way2": way (player and enemies can ONLY walk on this tiles)
-    - "wall1","wall2": wall(can not be used as way or platforming-tiles!)
-    - "." : for showing the background image(needs to be filled for every empty tile place)
-    - "E": for enemies
-    - "P": for player
-    
-    Return ONLY the modified level_layout as a list of lists.
-    """
+        boss_text = "Place ONE 'G' (Boss) on a platform" if boss_allowed else "DO NOT use 'G'"
+
+        prompt_content = f"""
+        ACT AS: A 2D Level Designer and build a new level_map based on the {performance_tracker} of the player and these level rules.
+        RULES:
+        1. GRAVITY: Every 'E' (Enemy) or 'G' (Boss) MUST be at index [row][col] 
+           where [row+1][col] is either 'way1' or 'way2'. NO EXCEPTIONS.
+        2. PLATFORMS: Create jumps by placing 3-5 'way' tiles horizontally. 
+        3. BOSS: {boss_text}.
+        4. PLAYABILITY: Ensure 'P' can reach the exit.
+
+        MAP: {level_data}
+        RETURN: Only the Python list of lists.
+        """
 
     try:
 
@@ -332,6 +337,8 @@ def let_agent_cook(level_data,perfomance_tracker):
 
     except Exception as e:
         print(f"Fehler im DataRepo/Agent-Workflow: {e}")
+
+    print(level_data)
 
         #Fallback if Agent is not working
     return level_data

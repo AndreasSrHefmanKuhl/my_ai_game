@@ -96,7 +96,7 @@ class Tile:
         self.tile_type = tile_type
         # Logik für Kollision
         self.is_wall = "wall" in tile_type or "brick" in tile_type
-        self.is_floor = "way" in tile_type or "floor" in tile_type or "head" in tile_type
+        self.is_floor = any(word in tile_type for word in ["way", "floor", "head", "ground"])
         self.is_deadly = "dead" in tile_type
 
 
@@ -156,43 +156,31 @@ class Enemy(pygame.sprite.Sprite):
 
     def patrol(self, level_tiles):
         self.state = "walk"
-
-        # 1. Predictive Rect (Where we WANT to go)
         move_step = self.direction * self.speed
+
+        # 1. Predict Horizontal Position
         next_rect = self.rect.copy()
         next_rect.x += move_step
 
-        # 2. Wall Detection
+        # 2. Wall Detection (Any solid tile)
         hit_wall = any(t.rect.colliderect(next_rect) for t in level_tiles if t.is_wall)
 
-        # 3. Robust Edge Detection (Area, not Point)
-        # We check a 20px wide box in front of the feet
-        sensor_w = 20
-        if self.direction > 0:
-            sensor_x = next_rect.right
-        else:
-            sensor_x = next_rect.left - sensor_w
+        # 3. Edge Detection (The "Sensor" Box)
+        # We place a small box exactly where the next step's feet would be
+        sensor_width = 10
+        sensor_x = next_rect.right if self.direction > 0 else next_rect.left - sensor_width
+        # Look slightly below the enemy's feet
+        sensor_rect = pygame.Rect(sensor_x, self.rect.bottom + 2, sensor_width, 10)
 
-        # Place sensor 5px deep into the tile row
-        sensor_rect = pygame.Rect(sensor_x, self.rect.bottom - 5, sensor_w, 15)
+        # If it's solid (is_floor or is_wall), there is ground
+        has_ground = any(sensor_rect.colliderect(t.rect) for t in level_tiles if (t.is_floor or t.is_wall))
 
-        has_ground = False
-        for t in level_tiles:
-            if (t.is_floor or t.is_wall) and sensor_rect.colliderect(t.rect):
-                has_ground = True
-                break
-
-        # 4. THE JITTER BREAKER
+        # 4. Turn logic
         if hit_wall or not has_ground:
-            # Step A: Flip direction
             self.direction *= -1
-
-            # Step B: DISPLACEMENT (Teleport 5 pixels away from the edge)
-            # This ensures that in the NEXT frame, the sensor isn't still
-            # hanging off the edge of the platform.
-            self.rect.x += self.direction * 5
+            # Prevent "jittering" by nudging the enemy away from the edge immediately
+            self.rect.x += self.direction * 2
         else:
-            # No edge? Move normally
             self.rect.x += move_step
 
     def chase(self, dist_x, level_tiles):
@@ -224,3 +212,26 @@ class Enemy(pygame.sprite.Sprite):
         if self.attack_cooldown <= 0:
             self.state = "attack"
             self.attack_cooldown = 0.85  # Seconds between hits
+
+class Endboss(pygame.sprite.Sprite):
+    """
+    High-health boss entity with unique animations.
+    Unlike standard enemies, it doesn't patrol; it guards the exit.
+    """
+    def __init__(self, x, y, anim_dict):
+        super().__init__()
+        self.animations = anim_dict
+        self.state = "idle"
+        self.frame_index = 0.0
+        self.health = 500
+        self.max_health = 500
+        self.image = self.animations[self.state][0]
+        self.rect = self.image.get_rect(topleft=(x, y))
+        self.is_boss = True
+
+    def update(self):
+
+        self.frame_index += 0.1
+        if self.frame_index >= len(self.animations[self.state]):
+            self.frame_index = 0
+        self.image = self.animations[self.state][int(self.frame_index)]
