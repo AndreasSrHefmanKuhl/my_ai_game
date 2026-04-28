@@ -24,12 +24,12 @@ def main():
     display, dw, dh = set_display(win_w, win_h, "Schaolin Vania")
     user_id = show_start_screen(display)
 
-    # Dynamic pathing
+    #  pathing
     base_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.normpath(os.path.join(base_dir, ".."))
     assets_vania = os.path.normpath(os.path.join(project_root, "assets", "Vania"))
 
-    #  Load Assets
+    #
     # Pointing to the parent folder so all sub-folders (idle, walk, punch) are loaded into the dict
     player_path = os.path.join(assets_vania, "SPRITES", "player","sprites","idle")
     player_data = load_all_animations(player_path, scale_factor=2)
@@ -90,7 +90,7 @@ def main():
             dx = 250
             requested_state = "walk"
 
-        # Actions (Priority)
+        # Actions
         if keys[pygame.K_f]:
             performance_tracker["punch"] += 1
             requested_state = "punch"
@@ -107,7 +107,7 @@ def main():
             requested_state = "jump"
             player.jump()
 
-        # Update state based on logic in classes.py
+        # Update state based on method in player
         player.change_state(requested_state)
 
         # --- PHYSICS & COLLISION ---
