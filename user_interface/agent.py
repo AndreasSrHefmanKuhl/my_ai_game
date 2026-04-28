@@ -16,13 +16,13 @@ OPENAI_API_KEY = os.getenv("OAI_KEY")
 tools =[]
 #  Define State
 class AgentState(TypedDict):
-    #  appends new messages to the existing list
+
     messages: Annotated[Sequence[BaseMessage], operator.add]
 
 #  Setup Model
 model = ChatOpenAI(
     api_key=OPENAI_API_KEY,
-    temperature=0.5,
+    temperature=1.2,
     model= "gpt-4o-mini",
     streaming=True
 ).bind_tools(tools)

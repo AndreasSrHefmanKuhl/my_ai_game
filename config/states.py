@@ -12,7 +12,7 @@ from config.vania_tile_aliases import VANIA_TILE_ALIASES
 class GameStateManager:
     def __init__(self, display):
         self.display = display
-        self.level_count = 1  # Track levels passed
+        self.level_count = 0  # Track levels passed
         self.user_id = None
         self.current_state = MenuState(self.display)
 
@@ -21,7 +21,7 @@ class GameStateManager:
 
         # Handle the transition to a new level
         if isinstance(next_state, LoadingState):
-            # Check if boss is allowed: Level 3 or higher
+
             boss_ready = (self.level_count >= 3)
             next_state.boss_allowed = boss_ready
 
@@ -55,13 +55,13 @@ class MenuState:
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_l:
-                    self.mode = "LOGIN";
+                    self.mode = "LOGIN"
                     self.msg_color = (255, 255, 255)
                 elif event.key == pygame.K_r:
-                    self.mode = "REGISTER";
+                    self.mode = "REGISTER"
                     self.msg_color = (255, 255, 255)
                 elif event.key == pygame.K_d:
-                    self.mode = "DELETE";
+                    self.mode = "DELETE"
                     self.msg_color = (255, 150, 0)
 
                 elif event.key == pygame.K_TAB:
@@ -119,7 +119,7 @@ class PlayState:
     def __init__(self, display, user_id, level_map=None):
         self.display = display
         self.user_id = user_id
-        self.TS = 48  # Ensure consistency with tileset scaling
+        self.TS = 32
         self.map_width = 64
         self.camera_x = 0
         self.performance_tracker = {"punch": 0, "kick": 0, "damage_dealt": 0}
@@ -207,11 +207,13 @@ class PlayState:
         return None
 
     def draw(self, screen):
+
         screen.blit(self.level_surface, (-self.camera_x, 0))
         for e in self.enemies:
             screen.blit(e.image, (int(e.rect.x - self.camera_x), int(e.rect.y)))
         screen.blit(self.player.image, (self.player.rect.x - self.camera_x, self.player.rect.y))
         draw_health_bar(screen, 20, 20, self.player.health, 100, height=10)
+        pygame.display.flip()
 
 
 class LoadingState:
@@ -223,8 +225,17 @@ class LoadingState:
         self.boss_allowed = False  # Set by GameStateManager right before update
 
     def update(self, dt, events):
-        # We pass boss_allowed to the agent
+        self.draw(self.display)
+        pygame.display.flip()
+
         new_map = let_agent_cook(self.old_map, self.tracker, self.boss_allowed)
+
+        player_exists = any('P' in row for row in new_map)
+
+        if not player_exists:
+            print("Agent forgot the player! Retrying...")
+            return self
+
         return PlayState(self.display, self.user_id, new_map)
 
     def draw(self, screen):

@@ -106,7 +106,7 @@ class Enemy(pygame.sprite.Sprite):
         self.attack_range = 50
         self.attack_cooldown = 0
 
-        # Distance-based patrol logic
+
         self.walked_distance = 0
         self.max_patrol_distance = 144  # 3 tiles * 48px
 
@@ -165,11 +165,11 @@ class Enemy(pygame.sprite.Sprite):
         new_dir = 1 if dist_x > 0 else -1
         move_speed = self.speed * 1.5
 
-        # 1. Predict next horizontal position
+
         next_rect = self.rect.copy()
         next_rect.x += new_dir * move_speed
 
-        # 2. Virtual Edge Detection (The Fix)
+
         # Create a small sensor rect in front of the enemy, below its feet
         sensor_x = next_rect.right if new_dir > 0 else next_rect.left - 10
         edge_sensor = pygame.Rect(sensor_x, self.rect.bottom + 2, 10, 10)
@@ -177,11 +177,10 @@ class Enemy(pygame.sprite.Sprite):
         walkable_tiles = [t for t in level_tiles if t.is_floor or t.is_wall]
         has_ground_ahead = any(edge_sensor.colliderect(t.rect) for t in walkable_tiles)
 
-        # 3. Standard Wall Detection
+        #  Standard Wall Detection
         hit_wall = any(next_rect.colliderect(t.rect) for t in walkable_tiles if t.is_wall)
 
-        # 4. Movement Decision
-        # Only move forward if there is ground AND no wall
+
         if has_ground_ahead and not hit_wall:
             self.state = "walk"
             self.direction = new_dir
@@ -200,7 +199,7 @@ class Endboss(pygame.sprite.Sprite):
     def __init__(self, x, y, anim_dict):
         super().__init__()
         self.animations = anim_dict
-        self.state = "idle"
+        self.state = "walk"
         self.frame_index = 0.0
         self.health = 500
         self.max_health = 500
