@@ -10,13 +10,37 @@ from config.vania_tile_aliases import VANIA_TILE_ALIASES
 
 
 class GameStateManager:
+    """
+        The central controller for the game's finite state machine.
+
+        Manages transitions between different game states (Menu, Play, Loading, etc.)
+        and maintains global persistent data like user progress and level counts.
+        """
+
     def __init__(self, display):
+        """
+                Initializes the manager with a reference to the main display surface.
+
+                Args:
+                    display (pygame.Surface): The main Pygame window surface.
+                """
+
         self.display = display
         self.level_count = 0  # Track levels passed
         self.user_id = None
         self.current_state = MenuState(self.display)
 
     def update(self, dt, events):
+        """
+                Delegates logic updates to the current state and handles state transitions.
+
+                This method specifically manages logic for level progression and
+                unlocking the Endboss based on the level count.
+
+                Args:
+                    dt (float): Delta time since the last frame.
+                    events (list): List of pygame events from the event queue.
+                """
         next_state = self.current_state.update(dt, events)
 
         # Handle the transition to a new level
@@ -25,7 +49,7 @@ class GameStateManager:
             boss_ready = (self.level_count >= 3)
             next_state.boss_allowed = boss_ready
 
-            # Increment count for the level that is about to be cooked
+            # Increment count for the level
             self.level_count += 1
             print(f"Moving to Level {self.level_count}. Boss Status: {boss_ready}")
 
@@ -36,11 +60,18 @@ class GameStateManager:
             self.current_state = next_state
 
     def draw(self):
+        """Delegates the rendering task to the currently active state."""
         self.current_state.draw(self.display)
 
 
 class MenuState:
+    """
+        Handles the user interface for Login, Registration, and Account Deletion.
+        """
+
     def __init__(self, display):
+        """Initializes menu assets, fonts, and sets the default mode to LOGIN."""
+
         self.display = display
         self.font = pygame.font.SysFont("Arial", 28)
         self.input_font = pygame.font.SysFont("Arial", 24)
@@ -52,6 +83,14 @@ class MenuState:
         self.msg_color = (255, 255, 255)
 
     def update(self, dt, events):
+        """
+                Processes keyboard input for text fields and mode selection.
+
+                Returns:
+                    PlayState: If login is successful.
+                    None: If the user is still interacting with the menu.
+                """
+
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_l:
@@ -103,6 +142,7 @@ class MenuState:
         return None
 
     def draw(self, screen):
+        """Renders the authentication forms, input text, and feedback messages."""
         screen.fill((20, 20, 30))
         t_surf = self.font.render(f"--- {self.mode} ---", True, (255, 255, 255))
         f_surf = self.input_font.render(self.feedback_text, True, self.msg_color)
@@ -116,7 +156,20 @@ class MenuState:
 
 
 class PlayState:
+    """
+        Main gameplay state where physics, combat, and camera logic are executed.
+        """
+
     def __init__(self, display, user_id, level_map=None):
+        """
+                Loads level assets, initializes player/enemies, and builds the world surface.
+
+                Args:
+                    display (pygame.Surface): The main display surface.
+                    user_id (int): ID of the authenticated user.
+                    level_map (list, optional): A 2D list grid. If None, a default map is generated.
+                """
+
         self.display = display
         self.user_id = user_id
         self.TS = 32
@@ -148,6 +201,17 @@ class PlayState:
         self.level_surface = create_level_surface(self.level_map, self.tile_library, bg_img, self.TS)
 
     def update(self, dt, events):
+        """
+                Calculates physics (gravity/collisions), player movement, and combat.
+
+                Tracks player performance for the AI agent and checks for game-over
+                or level-completion conditions.
+
+                Returns:
+                    GameOverState: If player health reaches zero.
+                    LoadingState: If all enemies are defeated.
+                    None: If gameplay continues.
+                """
         keys = pygame.key.get_pressed()
         dx = 0
         requested_state = "stand"
@@ -208,6 +272,8 @@ class PlayState:
 
     def draw(self, screen):
 
+        """Renders the level background, entities, and HUD (health bar)."""
+
         screen.blit(self.level_surface, (-self.camera_x, 0))
         for e in self.enemies:
             screen.blit(e.image, (int(e.rect.x - self.camera_x), int(e.rect.y)))
@@ -217,7 +283,18 @@ class PlayState:
 
 
 class LoadingState:
+    """
+        A bridge state that displays a loading screen while the AI Agent generates a new map.
+        """
+
     def __init__(self, display, user_id, old_map, tracker):
+        """
+                Args:
+                    display (pygame.Surface): The main display surface.
+                    user_id (int): Current user ID.
+                    old_map (list): The layout of the previous level.
+                    tracker (dict): Player performance data to influence AI generation.
+                """
         self.display = display
         self.user_id = user_id
         self.old_map = old_map
@@ -225,6 +302,10 @@ class LoadingState:
         self.boss_allowed = False  # Set by GameStateManager right before update
 
     def update(self, dt, events):
+        """
+                Triggers the AI generation workflow and transitions to PlayState once a
+                valid map is received.
+                """
         self.draw(self.display)
         pygame.display.flip()
 
@@ -239,6 +320,7 @@ class LoadingState:
         return PlayState(self.display, self.user_id, new_map)
 
     def draw(self, screen):
+        """Renders the 'Agent is cooking' loading text."""
         screen.fill((0, 0, 0))
         font = pygame.font.SysFont("Arial", 32)
         txt = font.render("Agent is cooking the level...", True, (255, 255, 255))
@@ -247,17 +329,34 @@ class LoadingState:
 
 
 class GameOverState:
+    """Displays the final Game Over screen and waits for user input to restart."""
+
     def __init__(self, display, user_id):
+
+        """Initializes the game over state for the current user."""
+
         self.display = display
         self.user_id = user_id
 
     def update(self, dt, events):
+
+        """
+                        Listens for any key press to return the user to the MenuState.
+
+                        Returns:
+                            MenuState: If a key is pressed.
+                            None: If waiting for input.
+                        """
+
         for event in events:
             if event.type == pygame.KEYDOWN:
                 return MenuState(self.display)
         return None
 
     def draw(self, screen):
+
+        """Renders the 'GAME OVER' text in the center of the screen."""
+
         screen.fill((0, 0, 0))
         font = pygame.font.SysFont("Arial", 64)
         surf = font.render("GAME OVER", True, (255, 0, 0))
